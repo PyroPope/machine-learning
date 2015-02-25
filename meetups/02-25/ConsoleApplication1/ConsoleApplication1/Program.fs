@@ -3,8 +3,12 @@
 open System
 open System.IO
 
-let ageFile = @"c:\stuff\desktop\ex2x.dat"
-let heightFile = @"c:\stuff\desktop\ex2y.dat"
+let dataDir = DirectoryInfo( __SOURCE_DIRECTORY__).Parent.Parent.FullName
+    
+let ageFile = Path.Combine(dataDir, "ex2x.dat")
+let heightFile = Path.Combine(dataDir, "ex2x.dat")
+
+printfn "%s" ageFile
 
 let readLines (filePath:string) =  [
     use sr = new StreamReader (filePath)
