@@ -12,6 +12,8 @@ let readLines (filePath:string) =  [
         yield Double.Parse(line)
 ]
 
+
+
 type datum = {age:float; height:float}
 
 let rec climbHill (f: float -> float) (x:float) (step:float) = seq{   
@@ -23,10 +25,18 @@ let rec climbHill (f: float -> float) (x:float) (step:float) = seq{
     yield! climbHill f x' step'       
 }    
 
-let estimate a c x = a*x + c
+let guess (data: datum list) =
+    let first = data.Head
+    let last = List.reduce (fun _ i -> i) data
+    if first.height = last.height then
+        (0.0, first.height)
+    else
+        let a = (last.height - first.height)/(last.age - first.age)
+        let c = first.height - (first.age * a)
+        (a, c)            
 
 let costDatum a c (dtm:datum)  =
-    let est = estimate a c dtm.age
+    let est = a * dtm.age + c
     let error = est - dtm.height
     error * error
 
@@ -54,11 +64,13 @@ let main argv =
     
     for d in sampleData do
         printfn "age:%f height:%f" d.age d.height
+
+    let (a, c) = guess(sampleData) 
+    let step = 1.0;
     
-    let c = 0.75003
-    let ourF a = -(cost sampleData a c)
+    let ourF x = -(cost sampleData x c)
     
-    let trail = climbHill ourF 1.0 10.9
+    let trail = climbHill ourF a step
 
     for (a, cost) in trail do
         printfn "a:%f cost:%f" a cost
