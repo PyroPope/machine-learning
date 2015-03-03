@@ -22,8 +22,11 @@ let heights = readLines heightFile
 
 type datum = {age:float; height:float}
 
+printfn "got %d ages and %d heights" ages.Length heights.Length
 
- let rec climbHill (f: float -> float) (x:float) (d:float) = seq{   
+let sampleData = List.zip ages heights |> List.map(fun (a, h) -> {age=a; height = h})
+
+let rec climbHill (f: float -> float) (x:float) (d:float) = seq{   
     let y = f x
     yield (x, y)
     let x' = x + d
@@ -32,43 +35,28 @@ type datum = {age:float; height:float}
     yield! climbHill f x' d'       
 }    
 
+for d in sampleData do
+    printfn "age:%f height:%f" d.age d.height
 
+let expected a c x = a*x + c
+
+let costDatum a c (dtm:datum)  =
+    let exp = expected a c dtm.age
+    let dist = exp - dtm.height
+    dist * dist
+
+let cost (data:datum list) a c =
+    data 
+    |> List.map (costDatum a c)
+    |> List.sum
+
+let ourF a = -(cost sampleData a 0.75)
+    
+let trail = climbHill ourF 1.0 1.0
+
+for (aa, cc) in trail do
+    printfn "a:%f cost:%f" aa -cc
 
 [<EntryPoint>]
 let main argv = 
-    printfn "%A" argv
-    printfn "got %d ages and %d heights" ages.Length heights.Length
-
-    let sampleData = List.zip ages heights |> List.map(fun (a, h) -> {age=a; height = h})
-    
-    for d in sampleData do
-        printfn "age:%f height:%f" d.age d.height
-
-    let expected a c x = a*x + c
-
-    let costDatum a c (dtm:datum)  =
-        let exp = expected a c dtm.age
-        let dist = exp - dtm.height
-        dist * dist
-
-    let cost (data:datum list) a c =
-        data 
-        |> List.map (costDatum a c)
-        |> List.sum
-
-    let ourF a = -(cost sampleData a 0.75)
-    
-    let trail = climbHill ourF 1.0 10.0
-
-    for (aa, cc) in trail do
-        printfn "a:%f cost:%f" aa -cc
-
-    //trail |> Seq.map (fun (a, c) -> (printfn "a:%f cost:%f" a c)) |> ignore 
-        
-//    let newCost = cost sampleData 1.0  1.0
-//    newCost |> printfn "cost is: %f"
-
-
-    Console.ReadKey() |> printfn "xx %A"
-    let x = ("a", "b")
-    0 // return an integer exit code
+    0
