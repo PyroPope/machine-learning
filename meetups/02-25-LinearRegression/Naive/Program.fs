@@ -1,5 +1,7 @@
 ﻿// Learn more about F# at http://fsharp.net
 // See the 'F# Tutorial' project for more help.
+// y=0.06391x + 0.750029999999
+
 open System
 open System.IO
 
@@ -39,7 +41,7 @@ let main argv =
     let dataDir = Path.Combine(appDir.FullName, "Data")
     
     let ageFile = Path.Combine(dataDir, "ex2x.dat")
-    let heightFile = Path.Combine(dataDir, "ex2x.dat")
+    let heightFile = Path.Combine(dataDir, "ex2y.dat")
 
     printfn "%s" ageFile
 
@@ -53,7 +55,7 @@ let main argv =
     for d in sampleData do
         printfn "age:%f height:%f" d.age d.height
     
-    let c = 0.75
+    let c = 0.75003
     let ourF a = -(cost sampleData a c)
     
     let trail = climbHill ourF 1.0 10.9
