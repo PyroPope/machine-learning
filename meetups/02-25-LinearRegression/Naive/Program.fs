@@ -3,7 +3,8 @@
 open System
 open System.IO
 
-let dataDir = DirectoryInfo( __SOURCE_DIRECTORY__).Parent.Parent.FullName
+let appDir =  DirectoryInfo( __SOURCE_DIRECTORY__).Parent
+let dataDir = Path.Combine(appDir.FullName, "Data")
     
 let ageFile = Path.Combine(dataDir, "ex2x.dat")
 let heightFile = Path.Combine(dataDir, "ex2x.dat")
