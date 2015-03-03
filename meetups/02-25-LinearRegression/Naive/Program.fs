@@ -3,14 +3,6 @@
 open System
 open System.IO
 
-let appDir =  DirectoryInfo( __SOURCE_DIRECTORY__).Parent
-let dataDir = Path.Combine(appDir.FullName, "Data")
-    
-let ageFile = Path.Combine(dataDir, "ex2x.dat")
-let heightFile = Path.Combine(dataDir, "ex2x.dat")
-
-printfn "%s" ageFile
-
 let readLines (filePath:string) =  [
     use sr = new StreamReader (filePath)
     while not sr.EndOfStream do
@@ -18,46 +10,55 @@ let readLines (filePath:string) =  [
         yield Double.Parse(line)
 ]
 
-let ages = readLines ageFile
-let heights = readLines heightFile
-
 type datum = {age:float; height:float}
 
-printfn "got %d ages and %d heights" ages.Length heights.Length
-
-let sampleData = List.zip ages heights |> List.map(fun (a, h) -> {age=a; height = h})
-
-let rec climbHill (f: float -> float) (x:float) (d:float) = seq{   
+let rec climbHill (f: float -> float) (x:float) (step:float) = seq{   
     let y = f x
     yield (x, y)
-    let x' = x + d
+    let x' = x + step
     let y' = f x'
-    let d' = if y' > y then d else -d/2.0
-    yield! climbHill f x' d'       
+    let step' = if y' > y then step else -step/2.0
+    yield! climbHill f x' step'       
 }    
 
-for d in sampleData do
-    printfn "age:%f height:%f" d.age d.height
-
-let expected a c x = a*x + c
+let estimate a c x = a*x + c
 
 let costDatum a c (dtm:datum)  =
-    let exp = expected a c dtm.age
-    let dist = exp - dtm.height
-    dist * dist
+    let est = estimate a c dtm.age
+    let error = est - dtm.height
+    error * error
 
 let cost (data:datum list) a c =
     data 
     |> List.map (costDatum a c)
     |> List.sum
 
-let ourF a = -(cost sampleData a 0.75)
-    
-let trail = climbHill ourF 1.0 1.0
-
-for (aa, cc) in trail do
-    printfn "a:%f cost:%f" aa -cc
-
 [<EntryPoint>]
 let main argv = 
+    let appDir =  DirectoryInfo( __SOURCE_DIRECTORY__).Parent
+    let dataDir = Path.Combine(appDir.FullName, "Data")
+    
+    let ageFile = Path.Combine(dataDir, "ex2x.dat")
+    let heightFile = Path.Combine(dataDir, "ex2x.dat")
+
+    printfn "%s" ageFile
+
+    let ages = readLines ageFile
+    let heights = readLines heightFile
+
+    printfn "got %d ages and %d heights" ages.Length heights.Length
+
+    let sampleData = List.zip ages heights |> List.map(fun (a, h) -> {age=a; height = h})
+    
+    for d in sampleData do
+        printfn "age:%f height:%f" d.age d.height
+    
+    let c = 0.75
+    let ourF a = -(cost sampleData a c)
+    
+    let trail = climbHill ourF 1.0 10.9
+
+    for (a, cost) in trail do
+        printfn "a:%f cost:%f" a cost
+
     0
