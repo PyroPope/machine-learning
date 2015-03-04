@@ -12,20 +12,9 @@ let readLines (filePath:string) =  [
         yield Double.Parse(line)
 ]
 
-
-
 type datum = {age:float; height:float}
 
-let rec climbHill (f: float -> float) (x:float) (step:float) = seq{   
-    let y = f x
-    yield (x, y)
-    let x' = x + step
-    let y' = f x'
-    let step' = if y' > y then step else -step/2.0
-    yield! climbHill f x' step'       
-}    
-
-let guess (data: datum list) =
+let linearGuess (data: datum list) =
     let first = data.Head
     let last = List.reduce (fun _ i -> i) data
     if first.height = last.height then
@@ -45,6 +34,15 @@ let cost (data:datum list) a c =
     |> List.map (costDatum a c)
     |> List.sum
 
+let rec climbHill (f: float -> float) (x:float) (step:float) = seq{   
+    let y = f x
+    yield (x, y, step)
+    let x' = x + step
+    let y' = f x'
+    let step' = if y' > y then step else -step/10.0
+    yield! climbHill f x' step'       
+}    
+
 [<EntryPoint>]
 let main argv = 
     let appDir =  DirectoryInfo( __SOURCE_DIRECTORY__).Parent
@@ -58,21 +56,24 @@ let main argv =
     let ages = readLines ageFile
     let heights = readLines heightFile
 
-    printfn "got %d ages and %d heights" ages.Length heights.Length
-
     let sampleData = List.zip ages heights |> List.map(fun (a, h) -> {age=a; height = h})
     
-    for d in sampleData do
-        printfn "age:%f height:%f" d.age d.height
-
-    let (a, c) = guess(sampleData) 
+    //let (aGuess, cGuess) = linearGuess(sampleData) 
+    let (aGuess, cGuess) = 1.0, 0.750029999999
+    
     let step = 1.0;
     
-    let ourF x = -(cost sampleData x c)
+    let ourF x = -(cost sampleData x cGuess)
     
-    let trail = climbHill ourF a step
+    let trail = climbHill ourF aGuess step
+    
+    let (a, cost, step) = 
+        trail 
+        |> Seq.where (fun (_, _, step) -> abs step < 0.0000001)
+        |> Seq.head
 
-    for (a, cost) in trail do
-        printfn "a:%f cost:%f" a cost
-
+    printfn "answer:%0.5f cost:%0.5f step:%0.10f" a cost step
+    
+    printfn "Press any key to close."
+    Console.ReadKey() |> ignore
     0
