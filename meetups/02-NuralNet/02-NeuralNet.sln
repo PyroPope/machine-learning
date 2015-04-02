@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "01-LinearRegression", "01-LinearRegression\Naive\01-LinearRegression.fsproj", "{584F6B10-EE0F-4BC1-8894-278A80D6818D}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "02-NeuralNet", "02-NuralNet\02-NeuralNet.fsproj", "{68DC5A01-3B17-4472-868E-C28636648A10}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ML02", "ML02.fsproj", "{68DC5A01-3B17-4472-868E-C28636648A10}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,10 +11,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{584F6B10-EE0F-4BC1-8894-278A80D6818D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{584F6B10-EE0F-4BC1-8894-278A80D6818D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{584F6B10-EE0F-4BC1-8894-278A80D6818D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{584F6B10-EE0F-4BC1-8894-278A80D6818D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{68DC5A01-3B17-4472-868E-C28636648A10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{68DC5A01-3B17-4472-868E-C28636648A10}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{68DC5A01-3B17-4472-868E-C28636648A10}.Release|Any CPU.ActiveCfg = Release|Any CPU
