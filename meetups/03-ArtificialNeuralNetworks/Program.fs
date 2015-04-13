@@ -33,13 +33,11 @@ let evalNet net inputs =
     (netOutputs.Head.[1], netOutputs)
             
 let getFromNet net =
-    let rec rotate listOfLists = 
-        match listOfLists with
-        | []::_ -> []
-        | _ -> 
-            let heads, tails =  listOfLists |> List.map (fun l -> (l.Head, l.Tail)) |> List.unzip
-            heads::(rotate tails)
-    List.map rotate net
+    // http://stackoverflow.com/questions/3016139/help-me-to-explain-the-f-matrix-transpose-function`
+    let rec transpose  = function
+        | (_::_)::_ as M -> List.map List.head M :: transpose (List.map List.tail M)
+        | _ -> []
+    List.map transpose net
 
 
 [<EntryPoint>]
