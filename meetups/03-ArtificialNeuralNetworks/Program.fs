@@ -31,19 +31,34 @@ let evalLayer (netOutputs : float list list) layer =
 let evalNet net inputs =
     let netOutputs = ([bias::inputs], net) ||> List.fold evalLayer
     (netOutputs.Head.[1], netOutputs)
-                    
+            
+let getFromNet net =
+    let rec rotate listOfLists = 
+        match listOfLists with
+        | []::_ -> []
+        | _ -> 
+            let heads, tails =  listOfLists |> List.map (fun l -> (l.Head, l.Tail)) |> List.unzip
+            heads::(rotate tails)
+    List.map rotate net
+
 
 [<EntryPoint>]
 let main argv = 
 
     let net = createNet 2 4
 
+    let layer = net.[0]
+    for neuron in net.[0] do printfn "%A" neuron
+
+    let net = getFromNet net
+    for neuron in net.[0] do printfn "%A" neuron
+
     let inputs = [1.0; 1.0]
 
-    let max = 
-        [1..100000] |> List.map (fun _ ->
-            fst (evalNet (createNet 2 4) inputs)
-        ) |> List.max
+//    let max = 
+//        [1..100000] |> List.map (fun _ ->
+//            fst (evalNet (createNet 2 4) inputs)
+//        ) |> List.max
     Console.WriteLine max
     Console.ReadKey() |> ignore
     0 
