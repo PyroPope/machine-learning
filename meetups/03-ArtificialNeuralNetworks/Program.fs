@@ -20,35 +20,49 @@ let createNet netInputCount hiddenLayerSizes outputLayerSize =
 let sigmoid x = 1.0 / (1.0 + exp -x)
 
 let evalNeuron inputs neuron =
-    let sum = ((0.0, neuron, inputs) |||> List.fold2 
-        (fun sum connection output -> sum + connection * output))
+    let aggregate sum a b = sum + a * b
+    let sum = ((0.0, neuron, inputs) |||> List.fold2 aggregate)
     sigmoid sum
 
 let evalLayer inputs layer =
     (layer |> List.map (evalNeuron (bias::inputs)))
 
 let evalNet net netInputs =
-    let outPutsByLayer = net |> List.scan evalLayer netInputs 
-    let netOutputs = outPutsByLayer |> List.reduce (fun _ i -> i)
-    netOutputs
+    net |> List.scan evalLayer netInputs
 
+let bodyAndTail list =
+    let r = List.rev list
+    (List.rev r.Tail, r.Head)
 
+let rec transpose  = function
+    | (_::_)::_ as M -> List.map List.head M :: transpose (List.map List.tail M)
+    | _ -> []
+
+let zip4 a b c d =
+    (List.zip a b, c, d) |||> List.map3 (fun (a, b) c d -> (a, b, c, d))
+
+let trainNet net inputs answers =
+    let allValues = evalNet net inputs
+    let layerInputs, netOutput = bodyAndTail allValues
+    let layerOutputs = allValues.Tail
+    let layerWeightsIn = net
+    let weightsOut = net |> List.map transpose 
+    let outLayerOutWeights = netOutput |> List.map (fun x -> [1.0])
+    let layerWeightsOut = weightsOut.Tail @ [ outLayerOutWeights ]
+    let layers = zip4 layerInputs layerWeightsIn layerOutputs layerWeightsOut
+    printfn "%A" layers
+    0    
 
 [<EntryPoint>]
 let main argv = 
-    let inputs = [1.1; 1.2]
+    let inputs = [1.0; 1.0]
     let net = createNet 2 [4] 1
-    printfn "%A" (evalNet net inputs)
+    let _ = trainNet net inputs [0.0]
+    //printfn "%A" net
 
     Console.ReadKey() |> ignore
 
 
-//    let netOutputs = ([bias::inputs], net) ||> List.fold evalLayer
-//    
-//    0
-//    outputs
-//    (netOutputs.Head.[1], netOutputs)
-//            
 //let getFroms net =
 //    let rec transpose  = function
 //        | (_::_)::_ as M -> List.map List.head M :: transpose (List.map List.tail M)
