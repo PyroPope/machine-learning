@@ -1,8 +1,9 @@
 ﻿open System
 
 let bias = 1.0
-//let learningConstant = 0.5
-//
+let learningConstant = 0.5
+
+// Creating
 let rnd = System.Random()
 let randomWeight() =  rnd.NextDouble() * 2.0 - 1.0
 
@@ -17,6 +18,7 @@ let createNet netInputCount hiddenLayerSizes outputLayerSize =
     let inputCounts = netInputCount :: hiddenLayerSizes
     (neuronLayerSizes, inputCounts) ||> List.map2 createLayer
 
+// Evaluating
 let sigmoid x = 1.0 / (1.0 + exp -x)
 
 let evalNeuron inputs neuron =
@@ -30,6 +32,7 @@ let evalLayer inputs layer =
 let evalNet net netInputs =
     net |> List.scan evalLayer netInputs
 
+// Training
 let bodyAndTail list =
     let r = List.rev list
     (List.rev r.Tail, r.Head)
@@ -41,16 +44,84 @@ let rec transpose  = function
 let zip4 a b c d =
     (List.zip a b, c, d) |||> List.map3 (fun (a, b) c d -> (a, b, c, d))
 
-let trainNet net inputs answers =
-    let allValues = evalNet net inputs
-    let layerInputs, netOutput = bodyAndTail allValues
-    let layerOutputs = allValues.Tail
-    let layerWeightsIn = net
-    let weightsOut = net |> List.map transpose 
-    let outLayerOutWeights = netOutput |> List.map (fun x -> [1.0])
-    let layerWeightsOut = weightsOut.Tail @ [ outLayerOutWeights ]
-    let layers = zip4 layerInputs layerWeightsIn layerOutputs layerWeightsOut
-    printfn "%A" layers
+//let lastItem list =
+//    list |> List.reduce (fun _ i -> i)
+
+//let pairUp list = 
+//    (([],(List.head list)), list.Tail) ||> List.scan (fun lastPair nextItem -> (snd lastPair, nextItem))
+
+let trainNet net args answers =
+    let allValues = evalNet net args
+    let allInputs, netOutputs = bodyAndTail allValues
+
+    let newWeightDelta neuronDelta input = learningConstant * neuronDelta * input
+    let newWeight neuronDelta input oldWeight  = oldWeight + (newWeightDelta neuronDelta input)
+    let neuronDelta output outputWeights outputDeltas =
+        let Z = (outputWeights, outputDeltas) ||> List.map2 (*)  |> List.sum
+        output * (1.0 - output) * Z        
+    let newNeuronAndDelta inputs outputDeltas outputWeights  output oldNeuron = 
+        let neuronDelta = neuronDelta output outputWeights outputDeltas
+        let newNeuron = (bias::inputs, oldNeuron) ||> List.map2 (newWeight output)
+        (newNeuron, neuronDelta)
+    let newLayerWithDeltas bpData inputs  oldLayer = 
+        let _, outputs, outputWeights, outputDeltas  = bpData
+        (outputWeights, outputs, oldLayer) |||> List.map3 (newNeuronAndDelta inputs outputDeltas)
+    let bpData inputs oldLayer lastBpData =
+        let newNet, _, _, _ = lastBpData
+        let newLayer, deltas = newLayerWithDeltas lastBpData inputs oldLayer |> List.unzip
+        printfn "bpData"; (newLayer::newNet, inputs, transpose oldLayer, deltas)
+    let newNet = 
+        let netWeights = [for _ in netOutputs -> [1.0]]
+        let netDeltas = List.map2 (fun answer output -> answer - output) answers netOutputs 
+        let initialState = ([], netOutputs, netWeights, netDeltas)
+        (allInputs, net, initialState) |||> List.foldBack2 bpData 
+    ()
+  
+
+
+//    // arrange data
+//    let allValues = evalNet net inputs
+//    let allInputs, netOutput = bodyAndTail allValues
+//    let hiddenLayers, outputLayer = bodyAndTail net 
+//    
+//    // get new output layer
+//    let outputNeuronDelta output answer = output * (1.0 - output) * (answer - output)
+//    let netOutputDeltas = (netOutput, answers) ||> List.map2 outputNeuronDelta
+//    let netDelta =  netOutputDeltas |> List.sum
+//    let newWeight  delta output oldWeight= oldWeight + (learningConstant * output * delta)
+//    let newOutputNeuron  delta output oldWeights = oldWeights |> List.map (newWeight delta output)
+//    let newOutputLayer = (netOutputDeltas, netOutput, outputLayer) |||> List.map3 newOutputNeuron
+//
+//    // arrange more
+//    let hiddenOutputs = allInputs.Tail
+//    let hiddenInputs = fst (bodyAndTail allInputs)
+//    let hiddenWeightsOut = (net |> List.map transpose).Tail 
+//    let hiddenLayerInfo = zip4 hiddenInputs hiddenLayers hiddenOutputs hiddenWeightsOut
+//
+//    // build new hidden layers
+//    let newWeight oldWeight delta = oldWeight + delta
+//    let weightDelta = 
+
+
+//        let delta = sum * input * (1.0 - input)         
+//        newWeight delta output oldWeight
+//
+//    let newHiddenNeuron weightsOut =
+//        let sum = List.sum weightsOut * netDelta
+
+
+
+// sum = (sum of outgoing weights) * netDelta
+// foreach incoming weight
+    //delta = output * (1 - output) * sum 
+    // newWeight
+
+//
+//    printfn "%A" netOutput
+//    let newNet = hiddenLayers 
+//    @ [newOutputLayer]
+//    printfn "%A" ((evalNet newNet inputs) |> bodyAndTail |> snd)
+
     0    
 
 [<EntryPoint>]
