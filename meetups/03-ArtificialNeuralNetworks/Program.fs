@@ -65,13 +65,13 @@ let trainNet net args answers =
         (newNeuron, neuronDelta)
     let newLayerWithDeltas bpData inputs  oldLayer = 
         let _, outputs, outputWeights, outputDeltas  = bpData
-        (outputWeights, outputs, oldLayer) |||> List.map3 (newNeuronAndDelta inputs outputDeltas)
+        ((List.tail outputWeights), outputs, oldLayer) |||> List.map3 (newNeuronAndDelta inputs outputDeltas)
     let bpData inputs oldLayer lastBpData =
         let newNet, _, _, _ = lastBpData
         let newLayer, deltas = newLayerWithDeltas lastBpData inputs oldLayer |> List.unzip
         printfn "bpData"; (newLayer::newNet, inputs, transpose oldLayer, deltas)
     let newNet = 
-        let netWeights = [for _ in netOutputs -> [1.0]]
+        let netWeights = [1.0]::[for _ in netOutputs -> [1.0]]
         let netDeltas = List.map2 (fun answer output -> answer - output) answers netOutputs 
         let initialState = ([], netOutputs, netWeights, netDeltas)
         (allInputs, net, initialState) |||> List.foldBack2 bpData 
