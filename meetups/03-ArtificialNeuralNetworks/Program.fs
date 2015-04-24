@@ -1,42 +1,31 @@
 ﻿open System
 open System.IO
+open System.Text.RegularExpressions
 open persistence
 
 let bias = 1.0
 let learningConstant = 0.9
+let rnd = System.Random()
 
 // Creating
-let rnd = System.Random()
-let randomWeight() =  rnd.NextDouble() * 2.0 - 1.0
-
-let createNeuron inputCount =
-    [for i in 1 .. inputCount -> randomWeight()]
-
-let createLayer neuronCount inputCount =
-    [for i in 1 .. neuronCount -> createNeuron (inputCount + 1)]
-    
-let createNet netInputCount hiddenLayerSizes outputLayerSize = 
-    let neuronLayerSizes = hiddenLayerSizes @ [outputLayerSize]
-    let inputCounts = netInputCount :: hiddenLayerSizes
-    (neuronLayerSizes, inputCounts) ||> List.map2 createLayer
+let createNet layerSizes =    
+    let createNeuron inputLayerSize = 
+        [for i in 1 .. 1 + inputLayerSize -> rnd.NextDouble() * 2.0 - 1.0]
+    let createLayer inputLayer neuronCount  = 
+        [for i in 1 .. neuronCount -> createNeuron (List.length inputLayer)]
+    (([], layerSizes) ||> List.scan createLayer).Tail.Tail
 
 // Evaluating
-let sigmoid x = 1.0 / (1.0 + exp -x)
+let evalNet net inputs =
+    (inputs, net) ||> List.scan (fun inputs layer ->
+        layer |> List.map (fun neuron ->
+            (neuron, bias::inputs)
+            ||> List.map2 (*)
+            |> List.sum
+            |> (fun sum -> 1.0 / (1.0 + exp -sum))))
 
-let evalNeuron inputs neuron =
-    let aggregate sum a b = sum + a * b
-    let sum = ((0.0, neuron, inputs) |||> List.fold2 aggregate)
-    let result = sigmoid sum
-    result
-
-let evalLayer inputs layer =
-    (layer |> List.map (evalNeuron (bias::inputs)))
-
-let evalNet net netInputs =
-    net |> List.scan evalLayer netInputs
-
-let evalOutputs net netInputs =
-    evalNet net netInputs |> List.reduce (fun _ l -> l)
+let feedForward net inputs =
+    evalNet net inputs |> List.reduce (fun _ l -> l)
 
 // Training
 let bodyAndTail list =
@@ -70,8 +59,8 @@ let trainNet net args answers =
     let newNet, _, _, _ = 
         let outCount = netOutputs.Length
         let netWeights = [for x in [1..outCount] -> [for y in [1..outCount] -> if x = y then 1.0 else 0.0]]
-        let netDeltas = List.map2 (fun answer output -> answer - output) answers netOutputs 
-        let initialState = ([], netOutputs, netWeights, netDeltas)
+        let netErrors = List.map2 (fun answer output -> answer - output) answers netOutputs 
+        let initialState = ([], netOutputs, netWeights, netErrors)
         (allInputs, net, initialState) |||> List.foldBack2 getBpData 
     newNet
 
@@ -115,13 +104,13 @@ let xorCases = [|
 
 // Train XOr
 let goXor() = 
-    let net = createNet 2 [2] 1
+    let net = createNet [2; 2; 1]
     let samples = getSamples xorCases 100000
-    printfn "cost before: %f" (calcCost samples (evalOutputs net) )
-    xorCases |> Array.iter (fun (inputs, answer) -> printfn "%f" (evalOutputs net inputs).[0])
+    printfn "cost before: %f" (calcCost samples (feedForward net) )
+    xorCases |> Array.iter (fun (inputs, answer) -> printfn "%f" (feedForward net inputs).[0])
     let finalNet = (net, samples) ||> List.fold (fun net (input, answers) -> (trainNet net input answers))
-    printfn "cost after:  %f" (calcCost samples (evalOutputs finalNet) )
-    xorCases |> Array.iter (fun (inputs, answer) -> printfn "%f" (evalOutputs finalNet inputs).[0])
+    printfn "cost after:  %f" (calcCost samples (feedForward finalNet) )
+    xorCases |> Array.iter (fun (inputs, answer) -> printfn "%f" (feedForward finalNet inputs).[0])
 
 let maxIndex list =
     list
@@ -133,7 +122,9 @@ let maxIndex list =
 let goDigits() = 
     let now() = DateTime.UtcNow
     let start = now()
-    let sampleSize = 80
+    let sampleSize = 324  
+    // 80; 512; 3280; 21000 ?
+    // 5; 40; 324; 2609; 21000;
     printfn "Loading data and calculating initial values ..."
  
     let buildAnswerList count index  =
@@ -144,56 +135,87 @@ let goDigits() =
         |> Array.map (fun line -> line.Split(',')) |> Array.toList
         |> List.map (fun fields -> fields |> Array.toList |> List.map (float))        
     let sampleCases = 
-        getValues "training.csv" sampleSize
+        getValues "training-20000.csv" sampleSize
         |> List.map (fun vals -> (vals.Tail, buildAnswerList 10.0 vals.Head))
     printfn "Sample count: %d" sampleCases.Length
-    //let testValues = getValues "testing.csv"
+    let testValues = 
+        getValues "training-1000.csv" 1000
+        |> List.map (fun vals -> (vals.Tail, buildAnswerList 10.0 vals.Head))
     
-    let stateFile = "digits"
+    let stateFile = "digits-1"
     let net = 
         match tryLoad stateFile with 
-        | None -> printfn "creating new net"; createNet 784 [2500;  159] 10   // (wiki MNIST database) -> 784 [2500; 2000; 1500; 1000; 500] 10 
+        // http://yann.lecun.com/exdb/mnist/  -> 500-100 
+        // (wiki MNIST database) -> 784 [2500; 2000; 1500; 1000; 500] 10 
+        | None -> printfn "creating new net"; createNet [784; 500; 100; 10]
         | Some(net) -> printfn "loading existing net from \"%s\"" stateFile; net
 
-    let countCorrect net = 
+    let countCorrectTraining net = 
         sampleCases 
-        |> List.filter (fun (inputs, answer) -> maxIndex (evalOutputs net inputs) = maxIndex answer) 
+        |> List.filter (fun (inputs, answer) -> maxIndex (feedForward net inputs) = maxIndex answer) 
+        |> List.length
+    
+    let countCorrectTesting net = 
+        testValues 
+        |> List.filter (fun (inputs, answer) -> maxIndex (feedForward net inputs) = maxIndex answer) 
         |> List.length
     
     let cases = Array.ofList sampleCases
     let caseCount = cases.Length
-    let getRandomSamples count = 
-        [for _ in [1..count] -> cases.[rnd.Next(caseCount)]]  
-      
-    printfn "initial cost:  %f" (calcCost sampleCases (evalOutputs net))
-    printfn "correct count: %d" (countCorrect net)
+    let getRandomSamples() = 
+        [for _ in [1..caseCount] -> cases.[rnd.Next(caseCount)]]  
 
+    let getPrimes greaterThan =
+        __SOURCE_DIRECTORY__  + "\TheFirst10,000Primes.txt"
+        |> File.ReadAllLines
+        |> Array.filter  (fun l ->  Regex.IsMatch(l, @"^\s*\d"))
+        |> Array.collect  (fun l -> Regex.Split(l, @"\s+", RegexOptions.Singleline))
+        |> Array.filter (fun t -> not (String.IsNullOrEmpty t))
+        |> Array.map (fun t -> int t)
+        |> Array.filter (fun i -> i > greaterThan && i < 100000)  // < 100,000 to prevent int overflow
+    let primes = getPrimes (sampleSize |> float |> sqrt |> int)
+    let getRandomWalk() =
+        let prime = primes.[rnd.Next(primes.Length)]
+        [0..sampleSize]
+        |> List.map (fun i -> (i * prime) % sampleSize)
+        |> List.map (fun index -> sampleCases.[index])
+      
+    printfn "initial cost:  %f" (calcCost sampleCases (feedForward net))
+    printfn "correct count: %d" (countCorrectTraining net)
+    printfn "testing count: %d" (countCorrectTesting net)
+    printfn ""
     let train net samples = (net, samples) ||> List.fold (fun net (input, answers) -> (trainNet net input answers))
     let finalNet = 
         (net, [1..100000]) 
         ||> List.fold (fun net cycleNumber -> 
             let cycleStart = now()
-            printfn "starting training cycle %d" cycleNumber
+            printf "starting training cycle %d, " cycleNumber
 
-            let samples = getRandomSamples sampleSize
+//            let samples = sampleCases
+//            let samples = getRandomSamples()
+            let samples = getRandomWalk()
+
             let newNet = train net samples
             save stateFile newNet
-            
-            let correctCount = countCorrect newNet
+            printfn " done."
+            let correctCount = countCorrectTraining newNet
             let correctPercent = 100.0 * float correctCount / float sampleSize
-            printfn "  cost:                   %f" (calcCost sampleCases (evalOutputs newNet))
+            printfn "  cost:                   %.15f" (calcCost sampleCases (feedForward newNet))
             printfn "  correct:                %.2f%% (%d of %d)" correctPercent correctCount sampleSize
+            printfn "  test set:      %d" (countCorrectTesting newNet)
             printfn "  cycle time:    %s" ((now() - cycleStart).ToString("hh\:mm\:ss"))
             printfn "  run time:      %s" ((now() - start).ToString("hh\:mm\:ss"))
-            newNet)
+            printfn ""
+            newNet )
     ()
 
 
 [<EntryPoint>]
 let main argv =
+    printfn "hello."
     //compareTheSampleDotCom()
-    //goXor()
-    goDigits()
+    goXor()
+    //goDigits()
 
     printfn "done."
     Console.ReadKey() |> ignore
