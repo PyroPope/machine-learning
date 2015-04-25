@@ -22,13 +22,6 @@ let private evalNet net inputs =
             (0.0, neuron, bias::inputs)
             |||> List.fold2 (fun sum weight input-> sum + weight * input)
             |> (fun sum -> 1.0 / (1.0 + exp -sum))))
-//let private evalNet net inputs =
-//    (inputs, net) ||> List.scan (fun inputs layer ->
-//        layer |> List.map (fun neuron ->
-//            (neuron, bias::inputs)
-//            ||> List.map2 (*)
-//            |> List.sum
-//            |> (fun sum -> 1.0 / (1.0 + exp -sum))))
 
 let feedForward net inputs =
     evalNet net inputs |> List.reduce (fun _ l -> l)
@@ -53,24 +46,31 @@ type private bpData = {
     outputLayerErrors : float list
 }
 
+type private lData = {
+    inLayerValues : float list
+    neurons : float list list
+    values : float list
+    outLayerValues : float list
+}
+
 let trainNet net args answers =
     let allValues = evalNet net args
     let allInputs, netOutputs = bodyAndTail allValues
+    let netValues = allValues.Tail
  
-    let bpState = {
+    let initialBpState = {
         newNet = []
         values = netOutputs
         weightsOut = (mIdentity netOutputs.Length)
-        outputLayerErrors = (answers, netOutputs) ||> List.map2 (fun answer output -> answer - output) }
+        outputLayerErrors = (answers, netOutputs) ||> List.map2 (-) }
    
-    let calcNewWeight neuronError inputWeight oldWeight  = 
-        oldWeight + learningConstant * neuronError * inputWeight
-    let calcNeuronError output outputWeights outputErrors =
-        ((outputWeights, outputErrors) ||> List.map2 (*)  |> List.sum) 
-        * output * (1.0 - output) 
     let newNeuronAndError inputs outputErrors outputWeights  output oldNeuron = 
-        let neuronError = calcNeuronError output outputWeights outputErrors
-        let newNeuron = (bias::inputs, oldNeuron) ||> List.map2 (calcNewWeight neuronError)
+        let neuronError = 
+            ((outputWeights, outputErrors) ||> List.map2 (*)  |> List.sum) 
+            * output * (1.0 - output) 
+        let newNeuron = 
+            (bias::inputs, oldNeuron) ||> List.map2 (fun input oldWeight -> 
+                oldWeight + learningConstant * neuronError * input)
         (newNeuron, neuronError)
     let newLayerAndErrors inputs  oldLayer bpData= 
         let newLayer, errors = 
@@ -81,7 +81,7 @@ let trainNet net args answers =
             values = inputs 
             weightsOut = (mTranspose oldLayer).Tail
             outputLayerErrors = errors}
-    let bpResult = (allInputs, net, bpState) |||> List.foldBack2 newLayerAndErrors  
+    let bpResult = (allInputs, net, initialBpState) |||> List.foldBack2 newLayerAndErrors  
     bpResult.newNet
 
 // Measure
@@ -203,6 +203,7 @@ let goDigits sampleSize =
     printfn "correct count: %d" (countCorrectTraining net)
     printfn "testing count: %d" (countCorrectTesting net)
     printfn ""
+
     let train net samples = (net, samples) ||> List.fold (fun net (input, answers) -> (trainNet net input answers))
     let finalNet = 
         (net, [1..100000]) 
