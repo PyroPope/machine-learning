@@ -46,17 +46,9 @@ type private bpData = {
     outputLayerErrors : float list
 }
 
-type private lData = {
-    inLayerValues : float list
-    neurons : float list list
-    values : float list
-    outLayerValues : float list
-}
-
-let trainNet net args answers =
+let backPropagate net args answers =
     let allValues = evalNet net args
     let allInputs, netOutputs = bodyAndTail allValues
-    let netValues = allValues.Tail
  
     let initialBpState = {
         newNet = []
@@ -64,24 +56,26 @@ let trainNet net args answers =
         weightsOut = (mIdentity netOutputs.Length)
         outputLayerErrors = (answers, netOutputs) ||> List.map2 (-) }
    
-    let newNeuronAndError inputs outputErrors outputWeights  output oldNeuron = 
-        let neuronError = 
-            ((outputWeights, outputErrors) ||> List.map2 (*)  |> List.sum) 
-            * output * (1.0 - output) 
-        let newNeuron = 
-            (bias::inputs, oldNeuron) ||> List.map2 (fun input oldWeight -> 
-                oldWeight + learningConstant * neuronError * input)
-        (newNeuron, neuronError)
-    let newLayerAndErrors inputs  oldLayer bpData= 
-        let newLayer, errors = 
-            (bpData.weightsOut, bpData.values, oldLayer) 
-            |||> List.map3 (newNeuronAndError inputs bpData.outputLayerErrors)
-            |> List.unzip
-        {   newNet = newLayer::(bpData.newNet)
-            values = inputs 
-            weightsOut = (mTranspose oldLayer).Tail
-            outputLayerErrors = errors}
-    let bpResult = (allInputs, net, initialBpState) |||> List.foldBack2 newLayerAndErrors  
+    let updateLayer inputs oldLayer bpData =         
+        let neuronErrors = 
+            (bpData.weightsOut, bpData.values) 
+            ||> List.map2 (fun outputWeights value -> 
+                ((0.0, outputWeights, bpData.outputLayerErrors) 
+                    |||> List.fold2 (fun s w e -> s + w*e)) * value * (1.0 - value))
+        let newLayer =
+            (oldLayer, neuronErrors) 
+                ||> List.map2 (fun oldNeuron neuronError ->
+                (bias::inputs, oldNeuron) ||> List.map2 (fun input oldWeight -> 
+                    oldWeight + learningConstant * neuronError * input))
+        let newBpState = {
+             newNet = newLayer::(bpData.newNet)
+             values = inputs 
+             weightsOut = (mTranspose oldLayer).Tail
+             outputLayerErrors = neuronErrors}
+        newBpState
+    let bpResult = 
+        (allInputs, net, initialBpState) 
+            |||> List.foldBack2 updateLayer  
     bpResult.newNet
 
 // Measure
@@ -107,7 +101,7 @@ let compareTheSampleDotCom() =
                         [0.1941121234; -0.3058878766; 0.1; 0.1941121234]];
                         [[0.2180521704; -0.2608288463; -0.1380250675]]]   
     let values = evalNet net inputs
-    let newNet = trainNet net inputs answer
+    let newNet = backPropagate net inputs answer
     printfn "newNet   %A" newNet
     printfn "expected %A" expectedNet
 
@@ -128,7 +122,7 @@ let goXor() =
     let samples = getSamples xorCases 10000
     printfn "cost before: %f" (calcCost samples (feedForward net) )
     xorCases |> Array.iter (fun (inputs, answer) -> printfn "%f" (feedForward net inputs).[0])
-    let finalNet = (net, samples) ||> List.fold (fun net (input, answers) -> (trainNet net input answers))
+    let finalNet = (net, samples) ||> List.fold (fun net (input, answers) -> (backPropagate net input answers))
     printfn "cost after:  %f" (calcCost samples (feedForward finalNet) )
     xorCases |> Array.iter (fun (inputs, answer) -> printfn "%f" (feedForward finalNet inputs).[0])
 
@@ -204,7 +198,7 @@ let goDigits sampleSize =
     printfn "testing count: %d" (countCorrectTesting net)
     printfn ""
 
-    let train net samples = (net, samples) ||> List.fold (fun net (input, answers) -> (trainNet net input answers))
+    let train net samples = (net, samples) ||> List.fold (fun net (input, answers) -> (backPropagate net input answers))
     let finalNet = 
         (net, [1..100000]) 
         ||> List.fold (fun net cycleNumber -> 
@@ -238,7 +232,7 @@ let main argv =
     //compareTheSampleDotCom()
     //goXor()
     //let sampleSize = if argv.Length > 0 then int argv.[0] else 324
-    goDigits 50
+    goDigits 85
 
     printfn "done."
     Console.ReadKey() |> ignore
