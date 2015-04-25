@@ -16,30 +16,53 @@ let createNet layerSizes =
     (([], layerSizes) ||> List.scan createLayer).Tail.Tail
 
 // Evaluating
-let evalNet net inputs =
+let private evalNet net inputs =
     (inputs, net) ||> List.scan (fun inputs layer ->
         layer |> List.map (fun neuron ->
-            (neuron, bias::inputs)
-            ||> List.map2 (*)
-            |> List.sum
+            (0.0, neuron, bias::inputs)
+            |||> List.fold2 (fun sum weight input-> sum + weight * input)
             |> (fun sum -> 1.0 / (1.0 + exp -sum))))
+//let private evalNet net inputs =
+//    (inputs, net) ||> List.scan (fun inputs layer ->
+//        layer |> List.map (fun neuron ->
+//            (neuron, bias::inputs)
+//            ||> List.map2 (*)
+//            |> List.sum
+//            |> (fun sum -> 1.0 / (1.0 + exp -sum))))
 
 let feedForward net inputs =
     evalNet net inputs |> List.reduce (fun _ l -> l)
 
-// Training
-let bodyAndTail list =
-    let r = List.rev list
+// helper functions...
+let rec private bodyAndTail list =
+    let r = (List.rev list)
     (List.rev r.Tail, r.Head)
-
-let rec transpose  = function
-    | (_::_)::_ as M -> List.map List.head M :: transpose (List.map List.tail M)
+   
+let rec private mTranspose  = function
+    | (_::_)::_ as M -> List.map List.head M :: mTranspose (List.map List.tail M)
     | _ -> []
+
+let private mIdentity size =
+    [for x in [1..size] -> [for y in [1..size] -> if x = y then 1.0 else 0.0]]
+
+// training
+type private bpData = {
+    newNet : float list list list 
+    values : float list
+    weightsOut : float list list
+    outputLayerErrors : float list
+}
 
 let trainNet net args answers =
     let allValues = evalNet net args
     let allInputs, netOutputs = bodyAndTail allValues
-
+ 
+    let bpState = {
+        newNet = []
+        values = netOutputs
+        weightsOut = (mIdentity netOutputs.Length)
+        outputLayerErrors = (answers, netOutputs) ||> List.map2 (fun answer output -> answer - output) }
+   
     let calcNewWeight neuronError inputWeight oldWeight  = 
         oldWeight + learningConstant * neuronError * inputWeight
     let calcNeuronError output outputWeights outputErrors =
@@ -49,20 +72,17 @@ let trainNet net args answers =
         let neuronError = calcNeuronError output outputWeights outputErrors
         let newNeuron = (bias::inputs, oldNeuron) ||> List.map2 (calcNewWeight neuronError)
         (newNeuron, neuronError)
-    let newLayerAndErrors bpData inputs  oldLayer = 
-        let _, outputs, outputWeights, outputErrors  = bpData
-        (outputWeights, outputs, oldLayer) |||> List.map3 (newNeuronAndError inputs outputErrors)
-    let getBpData inputs oldLayer lastBpData =
-        let newNet, _, _, _ = lastBpData
-        let newLayer, errors = newLayerAndErrors lastBpData inputs oldLayer |> List.unzip
-        (newLayer::newNet, inputs, (transpose oldLayer).Tail, errors)
-    let newNet, _, _, _ = 
-        let outCount = netOutputs.Length
-        let netWeights = [for x in [1..outCount] -> [for y in [1..outCount] -> if x = y then 1.0 else 0.0]]
-        let netErrors = List.map2 (fun answer output -> answer - output) answers netOutputs 
-        let initialState = ([], netOutputs, netWeights, netErrors)
-        (allInputs, net, initialState) |||> List.foldBack2 getBpData 
-    newNet
+    let newLayerAndErrors inputs  oldLayer bpData= 
+        let newLayer, errors = 
+            (bpData.weightsOut, bpData.values, oldLayer) 
+            |||> List.map3 (newNeuronAndError inputs bpData.outputLayerErrors)
+            |> List.unzip
+        {   newNet = newLayer::(bpData.newNet)
+            values = inputs 
+            weightsOut = (mTranspose oldLayer).Tail
+            outputLayerErrors = errors}
+    let bpResult = (allInputs, net, bpState) |||> List.foldBack2 newLayerAndErrors  
+    bpResult.newNet
 
 // Measure
 let calcCost samples (evalOutput) =
@@ -104,8 +124,8 @@ let xorCases = [|
 
 // Train XOr
 let goXor() = 
-    let net = createNet [2; 2; 1]
-    let samples = getSamples xorCases 100000
+    let net = createNet [2; 4; 1]
+    let samples = getSamples xorCases 10000
     printfn "cost before: %f" (calcCost samples (feedForward net) )
     xorCases |> Array.iter (fun (inputs, answer) -> printfn "%f" (feedForward net inputs).[0])
     let finalNet = (net, samples) ||> List.fold (fun net (input, answers) -> (trainNet net input answers))
@@ -119,12 +139,11 @@ let maxIndex list =
     |> fst
 
 // Train digit recognizer
-let goDigits() = 
-    let now() = DateTime.UtcNow
-    let start = now()
-    let sampleSize = 324  
+let goDigits sampleSize = 
     // 80; 512; 3280; 21000 ?
     // 5; 40; 324; 2609; 21000;
+    let now() = DateTime.UtcNow
+    let start = now()
     printfn "Loading data and calculating initial values ..."
  
     let buildAnswerList count index  =
@@ -142,7 +161,7 @@ let goDigits() =
         getValues "training-1000.csv" 1000
         |> List.map (fun vals -> (vals.Tail, buildAnswerList 10.0 vals.Head))
     
-    let stateFile = "digits-1"
+    let stateFile = sprintf "digits" 
     let net = 
         match tryLoad stateFile with 
         // http://yann.lecun.com/exdb/mnist/  -> 500-100 
@@ -196,8 +215,10 @@ let goDigits() =
             let samples = getRandomWalk()
 
             let newNet = train net samples
+            printf " d"
             save stateFile newNet
-            printfn " done."
+            printfn "one."
+            
             let correctCount = countCorrectTraining newNet
             let correctPercent = 100.0 * float correctCount / float sampleSize
             printfn "  cost:                   %.15f" (calcCost sampleCases (feedForward newNet))
@@ -214,8 +235,9 @@ let goDigits() =
 let main argv =
     printfn "hello."
     //compareTheSampleDotCom()
-    goXor()
-    //goDigits()
+    //goXor()
+    //let sampleSize = if argv.Length > 0 then int argv.[0] else 324
+    goDigits 50
 
     printfn "done."
     Console.ReadKey() |> ignore
