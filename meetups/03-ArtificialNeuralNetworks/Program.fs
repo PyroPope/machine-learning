@@ -4,6 +4,7 @@ open System.Text.RegularExpressions
 
 open ANN
 open Persistence
+open Training
 
 // Measure
 let calcCost samples (evalOutput) =
@@ -29,6 +30,17 @@ let xorCases = [|
 |]
 
 // Train XOr
+let go() =
+    let samples = List.ofArray xorCases
+    let net = createNet [2; 4; 1]
+    let checkCorrect result =
+        match result.sample.target.Head with
+        | 0. -> result.output.Head < 0.1
+        | 1. -> result.output.Head > 0.9
+        | _ -> false
+    let x =trainSeries net samples checkCorrect
+    ()
+
 let goXor() = 
     let net = createNet [2; 4; 1]
     let samples = getSamples xorCases 10000
@@ -142,10 +154,12 @@ let goDigits sampleSize =
 [<EntryPoint>]
 let main argv =
     printfn "hello."
-    CompareTheSampleDotCom.go()
+    //CompareTheSampleDotCom.go()
+
     //goXor()
     //let sampleSize = if argv.Length > 0 then int argv.[0] else 324
     //goDigits 85
+    go()
 
     printfn "done."
     Console.ReadKey() |> ignore
