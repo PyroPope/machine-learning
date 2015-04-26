@@ -51,6 +51,7 @@
     <Compile Include="ANN.fs" />
     <Compile Include="Training.fs" />
     <Compile Include="Persistence.fs" />
+    <Compile Include="CompareTheSampleDotCom.fs" />
     <Compile Include="File1.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

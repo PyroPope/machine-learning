@@ -5,44 +5,27 @@ open System.Text.RegularExpressions
 open ANN
 open Persistence
 
-
-
 // Measure
 let calcCost samples (evalOutput) =
     let sumOfSquares, count = ((0.0, 0), samples) ||> List.fold (fun (sum, count) sample ->
-        let inputs, answer = sample;
-        let outputs = evalOutput inputs
-        let sos = (0.0, answer, outputs) |||> List.fold2 (fun s a o -> s + (a-o)**2.0) 
+        let outputs = evalOutput sample.input
+        let sos = (0.0, sample.target, outputs) |||> List.fold2 (fun s a o -> s + (a-o)**2.0) 
         (sum + sos, count + 1)
     )
     sumOfSquares / float count
 
 // Running...
 
-// Compare to numeric example
-let compareTheSampleDotCom() =
-    let inputs = [1.0; 0.0; 1.0]
-    let answer = [1.0]
-    let net = [[[-0.4; 0.2; 0.4; -0.5; ]; [0.2; -0.3; 0.1; 0.2] ];
-                    [[0.1; -0.3; -0.2]]]
-    let expectedValues = [[1.0; 0.0; 1.0]; [0.3318122278; 0.5249791875]; [0.4738888988]]
-    let expectedNet = [[[-0.4078521058; 0.1921478942; 0.4; -0.5078521058];
-                        [0.1941121234; -0.3058878766; 0.1; 0.1941121234]];
-                        [[0.2180521704; -0.2608288463; -0.1380250675]]]   
-    let values = evaluateLayers net inputs
-    let newNet = backPropagate net inputs answer
-    printfn "newNet   %A" newNet
-    printfn "expected %A" expectedNet
 
 let getSamples cases count = 
     let size = Array.length cases
     [for _ in [1..count] -> cases.[rnd.Next(size)]]
 
 let xorCases = [|
-    ([0.0; 0.0], [0.0]);
-    ([0.0; 1.0], [1.0]);
-    ([1.0; 0.0], [1.0]);
-    ([1.0; 1.0], [0.0]);
+    { input=[0.0; 0.0]; target =[0.0]};
+    { input=[0.0; 1.0]; target =[1.0]};
+    { input=[1.0; 0.0]; target =[1.0]};
+    { input=[1.0; 1.0]; target =[0.0]};
 |]
 
 // Train XOr
@@ -50,10 +33,10 @@ let goXor() =
     let net = createNet [2; 4; 1]
     let samples = getSamples xorCases 10000
     printfn "cost before: %f" (calcCost samples (feedForward net) )
-    xorCases |> Array.iter (fun (inputs, answer) -> printfn "%f" (feedForward net inputs).[0])
-    let finalNet = (net, samples) ||> List.fold (fun net (input, answers) -> (backPropagate net input answers))
+    xorCases |> Array.iter (fun sample -> printfn "%f" (feedForward net sample.input).[0])
+    let finalNet = (net, samples) ||> List.fold (fun net sample -> ((backPropagate net sample).newNet))
     printfn "cost after:  %f" (calcCost samples (feedForward finalNet) )
-    xorCases |> Array.iter (fun (inputs, answer) -> printfn "%f" (feedForward finalNet inputs).[0])
+    xorCases |> Array.iter (fun sample -> printfn "%f" (feedForward finalNet sample.input).[0])
 
 let maxIndex list =
     list
@@ -78,7 +61,8 @@ let goDigits sampleSize =
         |> List.map (fun fields -> fields |> Array.toList |> List.map (float))        
     let sampleCases = 
         getValues "training-20000.csv" sampleSize
-        |> List.map (fun vals -> (vals.Tail, buildAnswerList 10.0 vals.Head))
+        |> List.map (fun vals ->
+            {input=vals.Tail; target=(buildAnswerList 10.0 vals.Head)})
     printfn "Sample count: %d" sampleCases.Length
     let testValues = 
         getValues "training-1000.csv" 1000
@@ -94,7 +78,7 @@ let goDigits sampleSize =
 
     let countCorrectTraining net = 
         sampleCases 
-        |> List.filter (fun (inputs, answer) -> maxIndex (feedForward net inputs) = maxIndex answer) 
+        |> List.filter (fun sample -> maxIndex (feedForward net sample.input) = maxIndex sample.target) 
         |> List.length
     
     let countCorrectTesting net = 
@@ -127,7 +111,7 @@ let goDigits sampleSize =
     printfn "testing count: %d" (countCorrectTesting net)
     printfn ""
 
-    let train net samples = (net, samples) ||> List.fold (fun net (input, answers) -> (backPropagate net input answers))
+    let train net samples = (net, samples) ||> List.fold (fun net sample -> ((backPropagate net sample).newNet))
     let finalNet = 
         (net, [1..100000]) 
         ||> List.fold (fun net cycleNumber -> 
@@ -158,10 +142,10 @@ let goDigits sampleSize =
 [<EntryPoint>]
 let main argv =
     printfn "hello."
-    //compareTheSampleDotCom()
+    CompareTheSampleDotCom.go()
     //goXor()
     //let sampleSize = if argv.Length > 0 then int argv.[0] else 324
-    goDigits 85
+    //goDigits 85
 
     printfn "done."
     Console.ReadKey() |> ignore

@@ -36,6 +36,14 @@ let private mIdentity size =
     [for x in [1..size] -> [for y in [1..size] -> if x = y then 1. else 0.]]
 
 // BackPropagation
+type Sample = {input : float list; target : float list}
+
+type BackPropagationResult = {
+    sample : Sample
+    output : float list
+    newNet : float list list list
+}
+
 type private BpData = {
     newNet : float list list list 
     values : float list
@@ -43,14 +51,7 @@ type private BpData = {
     outputLayerErrors : float list
 }
 
-type TrainResult = {
-    input : float list
-    target : float list
-    output : float list
-    newNet : float list list list
-}
-
-let backPropagate net input target =
+let backPropagate net sample =
     
     let buildNewLayer layerInput oldLayer bpData =         
         let neuronErrors = 
@@ -70,22 +71,20 @@ let backPropagate net input target =
              outputLayerErrors = neuronErrors}
         newBpState
 
-    let allValues = evaluateLayers net input
+    let allValues = evaluateLayers net sample.input
     let inputsByLayer, output = bodyAndTail allValues
 
     let initialBpState = {
         newNet = []
         values = output
         weightsBetween = (mIdentity output.Length)
-        outputLayerErrors = (target, output) ||> List.map2 (-) }
+        outputLayerErrors = (sample.target, output) ||> List.map2 (-) }
   
     let finalBpState = 
         (inputsByLayer, net, initialBpState) 
-            |||> List.foldBack2 buildNewLayer  
-    let x = {
-        input = input
-        target = target
+        |||> List.foldBack2 buildNewLayer  
+    {
+        sample = sample
         output = output
         newNet = finalBpState.newNet
     }
-    finalBpState.newNet

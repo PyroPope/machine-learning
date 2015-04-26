@@ -2,23 +2,29 @@
 
 open ANN
 
-//type TrainResult = {
-//    input : float list
-//    target : float list
-//    output : float list
-//    newNet : float list list list
-//}
-//
-//let trainOnce net input target =
-//    let newNet = backPropagate net input target
-//    {   input = input
-//        target = target
-//        output = output
-//        newNet = newNet 
-//    }
+type TrainingResult =
+    {   net : float list list list
+        cost : float
+        correctCount : int
+        bpResults : BackPropagationResult list }
 
-let calcVectorLengthSquared target output =
-    (0., target, output) |||> List.fold2 (fun s t o -> s + (t - o)**2.)
+let trainSample net sample =
+    backPropagate net sample
 
-
+let trainSeries net samples checkCorrect =
+    let results = samples |> List.map (trainSample net)
+    let errorsSquared = 
+        results 
+        |> List.map (fun r ->
+            (0., r.output, r.sample.target) 
+            |||> List.fold2 (fun s o t -> s + (t - o)**2.))
+        |> List.sum
+    let cost = errorsSquared / (2. * float results.Length)
+    let correctCount = results |> List.filter checkCorrect |> List.length
+    let lastResult = results |> List.reduce (fun _ l -> l)
+    {   net = lastResult.newNet
+        cost = cost
+        correctCount = correctCount
+        bpResults = results }
+ 
      
