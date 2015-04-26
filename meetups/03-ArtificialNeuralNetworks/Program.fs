@@ -1,92 +1,21 @@
 ﻿open System
 open System.IO
 open System.Text.RegularExpressions
-open persistence
 
-let bias = 1.0
-let learningConstant = 0.9
-let rnd = System.Random()
+open ANN
+open Persistence
 
-// Creating
-let createNet layerSizes =    
-    let createNeuron inputLayerSize = 
-        [for i in 1 .. 1 + inputLayerSize -> rnd.NextDouble() * 2.0 - 1.0]
-    let createLayer inputLayer neuronCount  = 
-        [for i in 1 .. neuronCount -> createNeuron (List.length inputLayer)]
-    (([], layerSizes) ||> List.scan createLayer).Tail.Tail
 
-// Evaluating
-let private evalNet net inputs =
-    (inputs, net) ||> List.scan (fun inputs layer ->
-        layer |> List.map (fun neuron ->
-            (0.0, neuron, bias::inputs)
-            |||> List.fold2 (fun sum weight input-> sum + weight * input)
-            |> (fun sum -> 1.0 / (1.0 + exp -sum))))
-
-let feedForward net inputs =
-    evalNet net inputs |> List.reduce (fun _ l -> l)
-
-// helper functions...
-let rec private bodyAndTail list =
-    let r = (List.rev list)
-    (List.rev r.Tail, r.Head)
-   
-let rec private mTranspose  = function
-    | (_::_)::_ as M -> List.map List.head M :: mTranspose (List.map List.tail M)
-    | _ -> []
-
-let private mIdentity size =
-    [for x in [1..size] -> [for y in [1..size] -> if x = y then 1.0 else 0.0]]
-
-// training
-type private bpData = {
-    newNet : float list list list 
-    values : float list
-    weightsOut : float list list
-    outputLayerErrors : float list
-}
-
-let backPropagate net args answers =
-    let allValues = evalNet net args
-    let allInputs, netOutputs = bodyAndTail allValues
- 
-    let initialBpState = {
-        newNet = []
-        values = netOutputs
-        weightsOut = (mIdentity netOutputs.Length)
-        outputLayerErrors = (answers, netOutputs) ||> List.map2 (-) }
-   
-    let updateLayer inputs oldLayer bpData =         
-        let neuronErrors = 
-            (bpData.weightsOut, bpData.values) 
-            ||> List.map2 (fun outputWeights value -> 
-                ((0.0, outputWeights, bpData.outputLayerErrors) 
-                    |||> List.fold2 (fun s w e -> s + w*e)) * value * (1.0 - value))
-        let newLayer =
-            (oldLayer, neuronErrors) 
-                ||> List.map2 (fun oldNeuron neuronError ->
-                (bias::inputs, oldNeuron) ||> List.map2 (fun input oldWeight -> 
-                    oldWeight + learningConstant * neuronError * input))
-        let newBpState = {
-             newNet = newLayer::(bpData.newNet)
-             values = inputs 
-             weightsOut = (mTranspose oldLayer).Tail
-             outputLayerErrors = neuronErrors}
-        newBpState
-    let bpResult = 
-        (allInputs, net, initialBpState) 
-            |||> List.foldBack2 updateLayer  
-    bpResult.newNet
 
 // Measure
 let calcCost samples (evalOutput) =
     let sumOfSquares, count = ((0.0, 0), samples) ||> List.fold (fun (sum, count) sample ->
         let inputs, answer = sample;
         let outputs = evalOutput inputs
-        let sos = (answer, outputs) ||> List.map2 (fun a o -> (a-o)**2.0) |> List.sum
+        let sos = (0.0, answer, outputs) |||> List.fold2 (fun s a o -> s + (a-o)**2.0) 
         (sum + sos, count + 1)
     )
-    sumOfSquares / (2.0 * float count)
+    sumOfSquares / float count
 
 // Running...
 
@@ -100,7 +29,7 @@ let compareTheSampleDotCom() =
     let expectedNet = [[[-0.4078521058; 0.1921478942; 0.4; -0.5078521058];
                         [0.1941121234; -0.3058878766; 0.1; 0.1941121234]];
                         [[0.2180521704; -0.2608288463; -0.1380250675]]]   
-    let values = evalNet net inputs
+    let values = evaluateLayers net inputs
     let newNet = backPropagate net inputs answer
     printfn "newNet   %A" newNet
     printfn "expected %A" expectedNet

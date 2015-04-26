@@ -48,7 +48,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <Compile Include="persistence.fs" />
+    <Compile Include="ANN.fs" />
+    <Compile Include="Training.fs" />
+    <Compile Include="Persistence.fs" />
     <Compile Include="File1.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
