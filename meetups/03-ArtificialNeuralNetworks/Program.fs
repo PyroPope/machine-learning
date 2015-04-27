@@ -6,6 +6,35 @@ open ANN
 open Persistence
 open Training
 
+
+// Running...
+let xorCases = [|
+    { input=[0.0; 0.0]; target =[0.0] };
+    { input=[0.0; 1.0]; target =[1.0] };
+    { input=[1.0; 0.0]; target =[1.0] };
+    { input=[1.0; 1.0]; target =[0.0] };
+|]
+
+// Train XOr
+let go() =
+    let net = createNet [2; 2; 1]
+    let checkCorrect result =
+        match result.sample.target.Head with
+        | 0. -> result.output.Head < 0.1
+        | 1. -> result.output.Head > 0.9
+        | _ -> failwith "doh!"
+    let checkDone result =
+        result.cost < 0.001
+    //let x = trainUntil net xorCases checkCorrect checkDone 
+    let x = trainIncrementally net xorCases checkCorrect checkDone 1
+    ()
+
+let maxIndex list =
+    list
+    |> List.mapi(fun i l -> i, l)
+    |> List.maxBy snd
+    |> fst
+
 // Measure
 let calcCost samples (evalOutput) =
     let sumOfSquares, count = ((0.0, 0), samples) ||> List.fold (fun (sum, count) sample ->
@@ -14,47 +43,6 @@ let calcCost samples (evalOutput) =
         (sum + sos, count + 1)
     )
     sumOfSquares / float count
-
-// Running...
-
-
-let getSamples cases count = 
-    let size = Array.length cases
-    [for _ in [1..count] -> cases.[rnd.Next(size)]]
-
-let xorCases = [|
-    { input=[0.0; 0.0]; target =[0.0]};
-    { input=[0.0; 1.0]; target =[1.0]};
-    { input=[1.0; 0.0]; target =[1.0]};
-    { input=[1.0; 1.0]; target =[0.0]};
-|]
-
-// Train XOr
-let go() =
-    let samples = List.ofArray xorCases
-    let net = createNet [2; 4; 1]
-    let checkCorrect result =
-        match result.sample.target.Head with
-        | 0. -> result.output.Head < 0.1
-        | 1. -> result.output.Head > 0.9
-        | _ -> false
-    let x =trainSeries net samples checkCorrect
-    ()
-
-let goXor() = 
-    let net = createNet [2; 4; 1]
-    let samples = getSamples xorCases 10000
-    printfn "cost before: %f" (calcCost samples (feedForward net) )
-    xorCases |> Array.iter (fun sample -> printfn "%f" (feedForward net sample.input).[0])
-    let finalNet = (net, samples) ||> List.fold (fun net sample -> ((backPropagate net sample).newNet))
-    printfn "cost after:  %f" (calcCost samples (feedForward finalNet) )
-    xorCases |> Array.iter (fun sample -> printfn "%f" (feedForward finalNet sample.input).[0])
-
-let maxIndex list =
-    list
-    |> List.mapi(fun i l -> i, l)
-    |> List.maxBy snd
-    |> fst
 
 // Train digit recognizer
 let goDigits sampleSize = 

@@ -35,7 +35,7 @@ let rec private mTranspose  = function
 let private mIdentity size =
     [for x in [1..size] -> [for y in [1..size] -> if x = y then 1. else 0.]]
 
-// BackPropagation
+// BackPropagation types
 type Sample = {input : float list; target : float list}
 
 type BackPropagationResult = {
@@ -51,6 +51,7 @@ type private BpData = {
     outputLayerErrors : float list
 }
 
+// BackPropagation
 let backPropagate net sample =
     
     let buildNewLayer layerInput oldLayer bpData =         

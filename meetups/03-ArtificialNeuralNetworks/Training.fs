@@ -1,6 +1,7 @@
 ﻿module Training
 open System
 open ANN
+open Primes
 
 type SessionStats =
     {   start : DateTime
@@ -20,9 +21,9 @@ type CycleResult =
 
 let now() = DateTime.UtcNow
 
-let trainSample net sample =
+let trainSample net sample =    
     backPropagate net sample
-
+    
 let calcCost results = 
     let errorsSquared = 
         results 
@@ -32,12 +33,14 @@ let calcCost results =
         |> List.sum
     errorsSquared / (2. * float results.Length)
 
-let private trainCycle net samples checkCorrect stats =
+let private trainCycle net getSamples checkCorrect stats =
     let start = now()
-    let results = samples |> List.map (trainSample net)
-    let correctCount = results |> List.filter checkCorrect |> List.length
-    let cost = calcCost results
-    let lastResult = results |> List.reduce (fun _ l -> l)
+    let _, revResults = ((net, []), getSamples()) ||> List.fold(fun (n, results) s -> 
+        let r = trainSample n s
+        (r.newNet, r:: results))
+    let correctCount = revResults |> List.filter checkCorrect |> List.length
+    let cost = calcCost revResults
+    let lastResult = revResults.Head
     {   net = lastResult.newNet
         cost = cost
         correctCount = correctCount
@@ -51,6 +54,7 @@ let private trainCycle net samples checkCorrect stats =
             }}
 
 let display r =
+    printfn "Completed cycle: %d" r.stats.cycleCount
     printfn "  cost:                   %.15f" r.cost
     let sampleCount = r.stats.sampleCount
     let correctPercent = 100.0 * float r.correctCount / float sampleCount
@@ -58,19 +62,51 @@ let display r =
     printfn "  samples:       %d" sampleCount
     printfn "  cycle time:    %s" (r.duration.ToString("hh\:mm\:ss"))
     printfn "  run time:      %s" (r.stats.duration.ToString("hh\:mm\:ss"))
+    printfn ""
 
-//             test set:      565
-//  cycle time:    00:00:22
-//  run time:      00:20:18
-
-//starting training cycle 57,  done.
-       
-let trainSeries net samples checkCorrect =
-    display (trainCycle net samples checkCorrect {
+let private createStats samplesLength = {
         start = now()
         duration = TimeSpan.Zero
-        sampleCount = samples.Length
-        cycleCount = 0  })
+        sampleCount = samplesLength
+        cycleCount = 0  }
+
+let trainSeries net samples checkCorrect =
+    let r = trainCycle net (fun _ -> samples) checkCorrect (createStats samples.Length)
+    //display r
+    r
+
+let getTrainingSetProvider samples =
+    let size = Array.length samples
+    let getIndexes =
+        let primes = getPrimes (int (sqrt (float size))) (Int32.MaxValue / size)
+        fun () -> 
+            let prime = primes.[rnd.Next(primes.Length)]
+            [1..size] |> List.map (fun i -> (i * prime) % size)    
+    fun () -> 
+        getIndexes() |> List.map (fun i -> samples.[i])          
+
+let trainUntil net samples checkCorrect checkDone =
+    let stats = createStats (Array.length samples)
+    let trainingSetProvider = getTrainingSetProvider samples
+    let rec runAndCheck net stats =
+        let r = trainCycle net trainingSetProvider checkCorrect stats 
+        match checkDone r with
+        | true -> r
+        | false -> runAndCheck r.lastResult.newNet r.stats
+    let r = runAndCheck net stats 
+    display r
+    r
+
+let rec trainIncrementally net samples checkCorrect checkDone start =
+    let samplesLength = Array.length samples
+    match start >= samplesLength with
+    | false ->
+        let r = trainUntil net samples.[1..start] checkCorrect checkDone 
+        trainIncrementally  r.net samples checkCorrect checkDone (start + 1)
+    | true ->
+        trainUntil net samples checkCorrect checkDone 
+        
+
 
  
      
