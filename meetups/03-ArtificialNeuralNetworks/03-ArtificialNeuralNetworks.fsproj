@@ -49,12 +49,13 @@
   <ItemGroup>
     <None Include="App.config" />
     <Compile Include="ANN.fs" />
-    <Compile Include="Primes.fs" />
-    <Compile Include="Training.fs" />
-    <Compile Include="Persistence.fs" />
     <Compile Include="CompareTheSampleDotCom.fs" />
-    <Compile Include="File1.fs" />
+    <Compile Include="Primes.fs" />
+    <Compile Include="Persistence.fs" />
+    <Compile Include="Training.fs" />
+    <Compile Include="XOr.fs" />
     <Compile Include="Program.fs" />
+    <Compile Include="MnistData.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

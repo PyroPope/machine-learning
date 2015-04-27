@@ -51,7 +51,7 @@ type private BpData = {
     outputLayerErrors : float list
 }
 
-// BackPropagation
+// BackPropagation 
 let backPropagate net sample =
     
     let buildNewLayer layerInput oldLayer bpData =         
