@@ -20,8 +20,8 @@ let xor() =
         | _ -> failwith "doh!"
     let checkDone result =
         result.cost < 0.001
-    //let x = trainUntil net xorCases checkCorrect checkDone 
-    let x = trainIncrementally net xorCases checkCorrect checkDone 1
+    ignore <| trainUntil net xorCases checkCorrect checkDone 
+    //let x = trainIncrementally net xorCases checkCorrect checkDone 1
     ()
 
 

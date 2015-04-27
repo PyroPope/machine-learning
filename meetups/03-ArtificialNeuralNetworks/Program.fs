@@ -6,33 +6,15 @@ open ANN
 open Persistence
 open Training
 open XOr
+open MnistData
+open Mnist
 
-// MNIST
+
 let maxIndex list =
     list
     |> List.mapi(fun i l -> i, l)
     |> List.maxBy snd
     |> fst
-
-let Mnist() =
-    let stateFile = "mnist"
-    let net = 
-        match tryLoad stateFile with 
-        // http://yann.lecun.com/exdb/mnist/  -> 500-100 
-        // (wiki MNIST database) -> 784 [2500; 2000; 1500; 1000; 500] 10 
-        | None -> printfn "creating new net"; createNet [784; 500; 100; 10]
-        | Some(net) -> printfn "loading existing net from \"%s\"" stateFile; net
-
-//    let checkCorrect result =
-//        match result.sample.target.Head with
-//        | 0. -> result.output.Head < 0.1
-//        | 1. -> result.output.Head > 0.9
-//        | _ -> failwith "doh!"
-//    let checkDone result =
-//        result.cost < 0.001
-//    //let x = trainUntil net xorCases checkCorrect checkDone 
-//    let x = trainIncrementally net xorCases checkCorrect checkDone 1
-    ()
 
 // Measure
 let calcCost samples (evalOutput) =
@@ -142,9 +124,10 @@ let goDigits sampleSize =
 let main argv =
     printfn "hello."
     //CompareTheSampleDotCom.go()
-    xor()
+    //xor()
     
-    //let sampleSize = if argv.Length > 0 then int argv.[0] else 324
+    let jobTrainSize = if argv.Length > 0 then int argv.[0] else 324
+    mnist jobTrainSize
     //goDigits 85
     
     printfn "done."
