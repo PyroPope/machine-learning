@@ -1,20 +1,39 @@
 ﻿module Mnist
 
+
+
 open ANN
 open Training
 open Persistence
 
 let mnist trainSize =
     let stateFile = "mnist"
-    let learnRate = 0.7
+    let learnRate = 0.9
 
     printfn "Using state file: \"%s\"" stateFile
     let net = 
         match tryLoad stateFile with 
         // http://yann.lecun.com/exdb/mnist/  -> 500-100 
         // (wiki MNIST database) -> 784 [2500; 2000; 1500; 1000; 500] 10 
-        | None -> printfn "Creating NEW net"; createNet [784; 500; 100; 10]
-        | Some(net) -> printfn "Loading existing net"; net
+        | None -> printf "Creating NEW net: "; createNet [784; 500; 100; 10]
+        | Some(net) -> printf "Loading existing net: "; net
+
+    let displayNetInfo =
+        let inputSize = net.Head.Head.Length - 1
+        let sizes = (net |> List.map (List.length))
+        let sizesString = 
+            inputSize :: sizes
+            |> List.map (fun i -> i.ToString("n0"))
+            |> String.concat "-"
+        let connectionCount = 
+            ((0, inputSize), sizes)
+            ||> List.scan (fun (_, previous) current -> (previous + 1, current))
+            |> List.tail
+            |> List.map (fun (a, b) -> a*b)
+            |> List.sum
+            
+        printfn "[%s], %sc" sizesString (connectionCount.ToString("n0"))
+
 
     printf "Loading samples: "
     let tup2Sample tuples = 

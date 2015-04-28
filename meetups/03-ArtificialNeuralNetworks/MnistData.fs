@@ -5,7 +5,7 @@ open System.IO
 let mnistData =
     let buildAnswerList count index  =
         [for i in 0.0..(count - 1.0) -> if i = index then 1.0 else 0.0]
-    let trainFile = __SOURCE_DIRECTORY__ + @"\digits\training.csv";
+    let trainFile = __SOURCE_DIRECTORY__ + @"\data\training.csv";
     let availableSamples =
         (File.ReadAllLines trainFile).[1..] 
         |> Array.map (fun line -> line.Split(',')) 

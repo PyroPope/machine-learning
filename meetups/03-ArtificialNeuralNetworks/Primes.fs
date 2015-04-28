@@ -5,7 +5,7 @@ open System.IO
 open System.Text.RegularExpressions
 
 let private primes =
-    __SOURCE_DIRECTORY__  + "\TheFirst10,000Primes.txt"
+    __SOURCE_DIRECTORY__  + "\data\TheFirst10,000Primes.txt"
     |> File.ReadAllLines
     |> Array.filter  (fun l ->  Regex.IsMatch(l, @"^\s*\d"))
     |> Array.collect  (fun l -> Regex.Split(l, @"\s+", RegexOptions.Singleline))
