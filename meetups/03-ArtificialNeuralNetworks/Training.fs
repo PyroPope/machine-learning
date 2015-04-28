@@ -6,7 +6,6 @@ open Primes
 type SessionStats =
     {   start : DateTime
         duration : TimeSpan
-        totalSampleCount : int
         cycleCount : int
     }
 
@@ -24,7 +23,7 @@ type CycleResult =
 let now() = DateTime.UtcNow
 
 let display r =
-    printfn "Completed cycle: %d" r.stats.cycleCount
+    printfn "Completed cycle %d" r.stats.cycleCount
     printfn "  cost:                   %.15f" r.cost
     let sampleCount = r.sampleCount
     let correctPercent = 100.0 * float r.correctCount / float sampleCount
@@ -36,8 +35,8 @@ let display r =
     printfn "  run time:      %s" (r.stats.duration.ToString("hh\:mm\:ss"))
     printfn ""
 
-let trainSample net sample =    
-    backPropagate net sample
+let trainSample net learnRate sample =    
+    backPropagate net learnRate sample
     
 let calcCost results = 
     let errorsSquared = 
@@ -48,20 +47,21 @@ let calcCost results =
         |> List.sum
     errorsSquared / (2. * float results.Length)
 
-let private trainCycle net getSamples checkCorrect stats testNet =
+let private trainCycle net learnRate samples checkCorrect stats testNet =
     let start = now()
-    let newNet, revResults = ((net, []), getSamples()) ||> List.fold(fun (n, results) s -> 
-        let r = trainSample n s
+    let newNet, revResults = ((net, []), samples) ||> List.fold(fun (n, results) s -> 
+        let r = trainSample n learnRate s
         (r.newNet, r:: results))
+    let sampleCount = samples.Length
     let lastResult = revResults.Head
     {   net = lastResult.newNet
         cost = calcCost revResults
-        sampleCount = revResults.Length
+        sampleCount = sampleCount
         correctCount = revResults |> List.filter checkCorrect |> List.length
         startTime = start
         duration = now() - start
         lastResult = lastResult 
-        testNetResult = testNet newNet
+        testNetResult = testNet newNet sampleCount
         stats = 
         { stats with 
             duration = stats.start - now()
@@ -71,11 +71,10 @@ let private trainCycle net getSamples checkCorrect stats testNet =
 let private createStats samplesLength = {
         start = now()
         duration = TimeSpan.Zero
-        totalSampleCount = samplesLength
         cycleCount = 0  }
 
-let trainSeries net samples checkCorrect testNet =
-    trainCycle net (fun _ -> samples) checkCorrect (createStats samples.Length) testNet
+let trainSeries net learnRate samples checkCorrect testNet =
+    trainCycle net  learnRate samples checkCorrect (createStats samples.Length) testNet
 
 let getTrainingSetProvider samples =
     let size = Array.length samples
@@ -87,26 +86,27 @@ let getTrainingSetProvider samples =
     fun () -> 
         getIndexes() |> List.map (fun i -> samples.[i])          
 
-let private trainUntilWithStats net samples checkCorrect checkDone stats testNet =
+let private trainUntilWithStats net learnRate samples checkCorrect checkDone stats testNet =
     let trainingSetProvider = getTrainingSetProvider samples
     let rec runAndCheck net stats =
-        let r = trainCycle net trainingSetProvider checkCorrect stats testNet
+        let r = trainCycle net learnRate (trainingSetProvider()) checkCorrect stats testNet
         display r
         match checkDone r with
         | true -> display r; r
         | false -> runAndCheck r.lastResult.newNet r.stats
     runAndCheck net stats
 
-let trainUntil net samples checkCorrect checkDone =
-     trainUntilWithStats net samples checkCorrect checkDone (createStats samples.Length)
+let trainUntil net learnRate samples checkCorrect checkDone =
+     trainUntilWithStats net learnRate samples checkCorrect checkDone (createStats samples.Length)
 
-let rec trainIncrementally net samples checkCorrect checkDone start testNet =
+let rec trainIncrementally net learnRate samples checkCorrect checkDone start testNet onIncrement =
     let stats = createStats (Array.length samples)
     let samplesLength = Array.length samples
     match start >= samplesLength with
     | false ->
-        let r = trainUntilWithStats net samples.[1..start] checkCorrect checkDone stats testNet
-        let increment = max 1 (start / 13)
-        trainIncrementally  r.net samples checkCorrect checkDone (start + increment) testNet
+        let r = trainUntilWithStats net learnRate samples.[1..start] checkCorrect checkDone stats testNet
+        let newStart = start + max 1 (start / 13)
+        onIncrement start newStart r.net
+        trainIncrementally  r.net learnRate samples checkCorrect checkDone newStart testNet onIncrement
     | true ->
-        trainUntilWithStats net samples checkCorrect checkDone stats
+        trainUntilWithStats net learnRate samples checkCorrect checkDone stats

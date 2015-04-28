@@ -1,7 +1,6 @@
 ﻿module ANN
 
 let bias = 1.
-let learningConstant = 0.9
 
 // Creating
 let rnd = System.Random()
@@ -13,15 +12,15 @@ let createNet layerSizes =
     (([], layerSizes) ||> List.scan createLayer).Tail.Tail
 
 // FeedForward
-let evaluateLayers net inputs =
+let evaluateLayers net learnRate  inputs =
     (inputs, net) ||> List.scan (fun inputs layer ->
         layer |> List.map (fun neuron ->
             (0., neuron, bias::inputs)
             |||> List.fold2 (fun sum weight input-> sum + weight * input)
             |> (fun sum -> 1. / (1. + exp -sum))))
 
-let feedForward net inputs =
-    evaluateLayers net inputs |> List.reduce (fun _ l -> l)
+let feedForward net learnRate inputs =
+    evaluateLayers net learnRate inputs |> List.reduce (fun _ l -> l)
 
 // BackPropagation helper functions...
 let rec private bodyAndTail list =
@@ -52,7 +51,7 @@ type private BpData = {
 }
 
 // BackPropagation 
-let backPropagate net sample =
+let backPropagate net learnRate sample =
     
     let buildNewLayer layerInput oldLayer bpData =         
         let neuronErrors = 
@@ -64,7 +63,7 @@ let backPropagate net sample =
             (oldLayer, neuronErrors) 
                 ||> List.map2 (fun oldNeuron neuronError ->
                 (bias::layerInput, oldNeuron) ||> List.map2 (fun input oldWeight -> 
-                    oldWeight + learningConstant * neuronError * input))
+                    oldWeight + learnRate * neuronError * input))
         let newBpState = {
              newNet = newLayer::(bpData.newNet)
              values = layerInput 
@@ -72,7 +71,7 @@ let backPropagate net sample =
              outputLayerErrors = neuronErrors}
         newBpState
 
-    let allValues = evaluateLayers net sample.input
+    let allValues = evaluateLayers net learnRate sample.input
     let inputsByLayer, output = bodyAndTail allValues
 
     let initialBpState = {
