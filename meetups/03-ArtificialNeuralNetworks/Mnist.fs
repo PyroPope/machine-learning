@@ -5,7 +5,7 @@ open Training
 open Persistence
 
 let mnist trainSize =
-    let stateFile = "debug"
+    let stateFile = "mnist"
     let learnRate = 0.7
 
     printfn "Using state file: \"%s\"" stateFile
@@ -40,7 +40,7 @@ let mnist trainSize =
         checkCorrect  bpResult.sample.target bpResult.output
 
     let checkDone cycleResult = 
-        cycleResult.cost < 0.001
+        cycleResult.cost < 0.0001 && cycleResult.correctCount = cycleResult.sampleCount 
 
     let testNet net sampleCount =
         let testCount = max 10 (min sampleCount testingSamplesCount)
@@ -53,14 +53,17 @@ let mnist trainSize =
             |> Array.length
         (correctCount, testCount)
 
-    printf "Initial accuracy: "
-    let x = 
-        let primePump = testNet net 1
+    let primePump = testNet net 1
+    let initialAccuracy size label = 
+        printf "Initial accuracy, %s: " label
         let start = now()
-        let right, count = testNet net trainSize
+        let right, count = testNet net size
         let duration = now() - start
         let correctPercent = 100.0 * float right / float count
         printfn " %.2f%% %d/%d in %.1fs" correctPercent right count duration.TotalSeconds
+    initialAccuracy testingSamplesCount "all"
+    initialAccuracy trainSize "stats"
+
 
     let onIncrement start newStart net =
         let startFile = sprintf "%s-%s" stateFile (start.ToString().PadLeft(5, '0'))

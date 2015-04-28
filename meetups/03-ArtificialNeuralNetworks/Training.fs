@@ -93,20 +93,22 @@ let private trainUntilWithStats net learnRate samples checkCorrect checkDone sta
         display r
         match checkDone r with
         | true -> display r; r
-        | false -> runAndCheck r.lastResult.newNet r.stats
+        | false -> runAndCheck r.net r.stats
     runAndCheck net stats
 
 let trainUntil net learnRate samples checkCorrect checkDone =
      trainUntilWithStats net learnRate samples checkCorrect checkDone (createStats samples.Length)
 
-let rec trainIncrementally net learnRate samples checkCorrect checkDone start testNet onIncrement =
+let trainIncrementally net learnRate samples checkCorrect checkDone start testNet onIncrement =
     let stats = createStats (Array.length samples)
-    let samplesLength = Array.length samples
-    match start >= samplesLength with
-    | false ->
-        let r = trainUntilWithStats net learnRate samples.[1..start] checkCorrect checkDone stats testNet
-        let newStart = start + max 1 (start / 13)
-        onIncrement start newStart r.net
-        trainIncrementally  r.net learnRate samples checkCorrect checkDone newStart testNet onIncrement
-    | true ->
-        trainUntilWithStats net learnRate samples checkCorrect checkDone stats
+    let rec trainIncrementallyWithStats net learnRate samples checkCorrect checkDone start testNet onIncrement stats =
+        let samplesLength = Array.length samples
+        match start >= samplesLength with
+        | false ->
+            let r = trainUntilWithStats net learnRate samples.[1..start] checkCorrect checkDone stats testNet
+            let newStart = start + max 1 (start / 13)
+            onIncrement start newStart r.net
+            trainIncrementallyWithStats  r.net learnRate samples checkCorrect checkDone newStart testNet onIncrement stats
+        | true ->
+            trainUntilWithStats net learnRate samples checkCorrect checkDone stats
+    trainIncrementallyWithStats net learnRate samples checkCorrect checkDone start testNet onIncrement stats
