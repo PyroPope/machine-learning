@@ -26,17 +26,19 @@ let now() = DateTime.UtcNow
 
 let display r =
     printfn "Completed cycle %d" r.stats.cycleCount
-    printfn "  cost:                  %.15f" r.cost
+    printfn "  cost:                   %.15f" r.cost
     let sampleCount = r.sampleCount
     let correctPercent = 100.0 * float r.correctCount / float sampleCount
-    printfn "  correct:               %.2f%% (%d of %d)" correctPercent r.correctCount sampleCount
+    printfn "  correct:                %.2f%% (%d of %d)" correctPercent r.correctCount sampleCount
     let testCorrect, testCount = r.testNetResult
     let testPercent = 100.0 * (float testCorrect) / float testCount
-    printfn "  test:         %.2f%%" testPercent
-    printfn "  cycle time:   %s" (r.duration.ToString("hh\:mm\:ss"))
-    printfn "  run time:     %s" (r.stats.duration.ToString("hh\:mm\:ss"))
+    printfn "  test:          %.2f%%" testPercent
+    printfn "  cycle time:    %s" (r.duration.ToString("hh\:mm\:ss"))
+    printfn "  run time:      %s" (r.stats.duration.ToString("hh\:mm\:ss"))
     let makeBig float = 10.**10. * float
-    printfn "  reduction<10: %.2f" (makeBig r.stats.costReduction)
+    let costRed = (makeBig r.stats.costReduction)
+    let pad = if costRed >= 0. then " " else ""
+    printfn "  reduction<10: %s%.2f" pad costRed 
     printfn ""
 
 
@@ -105,7 +107,7 @@ let private trainUntilWithStats net learnRate samples checkCorrect checkDone sta
         let r = trainCycle net learnRate (trainingSetProvider()) checkCorrect stats testNet
         display r
         match checkDone r with
-        | true -> display r; r
+        | true -> r
         | false -> runAndCheck r.net r.stats
     runAndCheck net stats
 

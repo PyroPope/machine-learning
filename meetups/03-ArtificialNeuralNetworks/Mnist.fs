@@ -59,17 +59,13 @@ let mnist trainSize =
         checkCorrect  bpResult.sample.target bpResult.output
 
     let checkDone cycleResult = 
-//        let newCheck cr =
-//            cr.stats.costReduction > 0.
-//            && cr.stats.costReduction < 0.0000000150 
-//            && cr.correctCount >= ((cr.sampleCount *12) / 13)
-//        printfn "  newTest: %b" (newCheck cycleResult)
         let reduction = cycleResult.stats.costReduction
+        let cost = cycleResult.cost
         cycleResult.correctCount >= ((cycleResult.sampleCount *12) / 13)
-            && reduction > 0.            
-            && (cycleResult.cost < 0.0001
-                || (cycleResult.cost < 0.01 
-                    && cycleResult.stats.costReduction < 0.0000000150 ))
+        && reduction > 0.            
+        && (
+            (cost < 0.0001 && reduction < 0.0000005000)
+            || (cycleResult.cost < 0.01 && reduction < 0.0000001500 ))
 
     let testNet net sampleCount =
         let testCount = max 10 (min sampleCount testingSamplesCount)
