@@ -8,7 +8,7 @@ open Persistence
 
 let mnist trainSize =
     let stateFile = "mnist"
-    let learnRate = 0.9
+    let learnRate = 0.8
 
     printfn "Using state file: \"%s\"" stateFile
     let net = 
@@ -32,7 +32,7 @@ let mnist trainSize =
             |> List.map (fun (a, b) -> a*b)
             |> List.sum
             
-        printfn "[%s], %sc" sizesString (connectionCount.ToString("n0"))
+        printfn "[%s], %s connections" sizesString (connectionCount.ToString("n0"))
 
 
     printf "Loading samples: "
@@ -59,7 +59,17 @@ let mnist trainSize =
         checkCorrect  bpResult.sample.target bpResult.output
 
     let checkDone cycleResult = 
-        cycleResult.cost < 0.0001 && cycleResult.correctCount = cycleResult.sampleCount 
+//        let newCheck cr =
+//            cr.stats.costReduction > 0.
+//            && cr.stats.costReduction < 0.0000000150 
+//            && cr.correctCount >= ((cr.sampleCount *12) / 13)
+//        printfn "  newTest: %b" (newCheck cycleResult)
+        let reduction = cycleResult.stats.costReduction
+        cycleResult.correctCount >= ((cycleResult.sampleCount *12) / 13)
+            && reduction > 0.            
+            && (cycleResult.cost < 0.0001
+                || (cycleResult.cost < 0.01 
+                    && cycleResult.stats.costReduction < 0.0000000150 ))
 
     let testNet net sampleCount =
         let testCount = max 10 (min sampleCount testingSamplesCount)
@@ -82,6 +92,7 @@ let mnist trainSize =
         printfn " %.2f%% %d/%d in %.1fs" correctPercent right count duration.TotalSeconds
     initialAccuracy testingSamplesCount "all"
     initialAccuracy trainSize "stats"
+    printfn "Learning Rate: %.2f" learnRate
 
 
     let onIncrement start newStart net =

@@ -6,6 +6,8 @@ open Primes
 type SessionStats =
     {   start : DateTime
         duration : TimeSpan
+        lastCost: float
+        costReduction : float
         cycleCount : int
     }
 
@@ -24,16 +26,19 @@ let now() = DateTime.UtcNow
 
 let display r =
     printfn "Completed cycle %d" r.stats.cycleCount
-    printfn "  cost:                   %.15f" r.cost
+    printfn "  cost:                  %.15f" r.cost
     let sampleCount = r.sampleCount
     let correctPercent = 100.0 * float r.correctCount / float sampleCount
-    printfn "  correct:                %.2f%% (%d of %d)" correctPercent r.correctCount sampleCount
+    printfn "  correct:               %.2f%% (%d of %d)" correctPercent r.correctCount sampleCount
     let testCorrect, testCount = r.testNetResult
     let testPercent = 100.0 * (float testCorrect) / float testCount
-    printfn "  test:          %.2f%%" testPercent
-    printfn "  cycle time:    %s" (r.duration.ToString("hh\:mm\:ss"))
-    printfn "  run time:      %s" (r.stats.duration.ToString("hh\:mm\:ss"))
+    printfn "  test:         %.2f%%" testPercent
+    printfn "  cycle time:   %s" (r.duration.ToString("hh\:mm\:ss"))
+    printfn "  run time:     %s" (r.stats.duration.ToString("hh\:mm\:ss"))
+    let makeBig float = 10.**10. * float
+    printfn "  reduction<10: %.2f" (makeBig r.stats.costReduction)
     printfn ""
+
 
 let trainSample net learnRate sample =    
     backPropagate net learnRate sample
@@ -52,10 +57,13 @@ let private trainCycle net learnRate samples checkCorrect stats testNet =
     let newNet, revResults = ((net, []), samples) ||> List.fold(fun (n, results) s -> 
         let r = trainSample n learnRate s
         (r.newNet, r:: results))
+
     let sampleCount = samples.Length
+    let cost = calcCost revResults
+    let costReduction = stats.lastCost - cost
     let lastResult = revResults.Head
     {   net = lastResult.newNet
-        cost = calcCost revResults
+        cost = cost
         sampleCount = sampleCount
         correctCount = revResults |> List.filter checkCorrect |> List.length
         startTime = start
@@ -66,12 +74,17 @@ let private trainCycle net learnRate samples checkCorrect stats testNet =
         { stats with 
             duration = stats.start - now()
             cycleCount = stats.cycleCount + 1
+            lastCost = cost
+            costReduction = costReduction
             }}
 
 let private createStats samplesLength = {
         start = now()
         duration = TimeSpan.Zero
-        cycleCount = 0  }
+        cycleCount = 0  
+        lastCost = 0.
+        costReduction = 2.
+        }
 
 let trainSeries net learnRate samples checkCorrect testNet =
     trainCycle net  learnRate samples checkCorrect (createStats samples.Length) testNet
