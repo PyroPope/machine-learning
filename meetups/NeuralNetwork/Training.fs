@@ -27,7 +27,7 @@ let now() = DateTime.UtcNow
 
 
 
-let display r =
+let display r learnRate=
     printfn "Completed cycle %d" r.stats.cycleCount
     printfn "  cost:                   %.15f" r.cost
     let sampleCount = r.sampleCount
@@ -43,7 +43,7 @@ let display r =
     let pad = if costRed >= 0. then " " else ""
     printfn "  reduction<10: %s%.2f" pad costRed 
     printfn ""
-    writeLog [sampleCount; r.correctCount; r.cost.ToString("0.000000000000000"); testPercent.ToString("00.000"); costRed ]
+    writeLog [learnRate; sampleCount; r.correctCount; r.cost.ToString("0.000000000000000"); testPercent.ToString("00.000"); costRed ]
 
 let trainSample net learnRate sample =    
     backPropagate net learnRate sample
@@ -113,7 +113,7 @@ let private trainUntilWithStats net learnRate samples checkCorrect checkDone sta
     let trainingSetProvider = getTrainingSetProvider samples
     let rec runAndCheck net stats =
         let r = trainCycle net learnRate (trainingSetProvider()) checkCorrect stats testNet
-        display r
+        display r learnRate
         match checkDone r with
         | true -> r
         | false -> runAndCheck r.net r.stats

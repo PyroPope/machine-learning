@@ -100,7 +100,7 @@ let mnist sessionName learnRate trainSize =
 
     printfn "Starting first cycle..."
     printfn ""
-    writeLog(["# Start sampleCount | correctCount | cost | testPercent | costReduction<10"])
+    writeLog(["# learnRate | sampleCount | correctCount | cost | testPercent | costReduction<10"])
 
     trainIncrementally net learnRate trainingSamples checkResult checkDone trainSize testNet onIncrement
     |> ignore
