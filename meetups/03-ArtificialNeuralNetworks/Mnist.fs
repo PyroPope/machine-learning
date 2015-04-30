@@ -6,13 +6,11 @@ open ANN
 open Training
 open Persistence
 
-let mnist trainSize =
-    let stateFile = "mnist"
-    let learnRate = 0.8
+let mnist sessionName learnRate trainSize =
 
-    printfn "Using state file: \"%s\"" stateFile
+    printfn "Using state file: \"%s\"" sessionName
     let net = 
-        match tryLoad stateFile with 
+        match tryLoad sessionName with 
         // http://yann.lecun.com/exdb/mnist/  -> 500-100 
         // (wiki MNIST database) -> 784 [2500; 2000; 1500; 1000; 500] 10 
         | None -> printf "Creating NEW net: "; createNet [784; 500; 100; 10]
@@ -59,17 +57,20 @@ let mnist trainSize =
         checkCorrect  bpResult.sample.target bpResult.output
 
     let checkDone cycleResult = 
-        let reduction = cycleResult.stats.costReduction
-        let cost = cycleResult.cost
-        cycleResult.correctCount >= ((cycleResult.sampleCount *12) / 13)
-        && reduction > 0.            
-        && (
-            (cost < 0.0001 && reduction < 0.0000005000)
-            || (cycleResult.cost < 0.01 && reduction < 0.0000001500 ))
+        if learnRate < 2. then
+            cycleResult.correctCount >= ((cycleResult.sampleCount *12) / 13)
+        else
+            let reduction = cycleResult.stats.costReduction
+            let cost = cycleResult.cost
+            cycleResult.correctCount >= ((cycleResult.sampleCount *12) / 13)
+            && reduction > 0.            
+            && (
+                (cost < 0.0005 && reduction < 0.0000010000)
+                || (cycleResult.cost < 0.02 && reduction < 0.0000003000 ))
 
     let testNet net sampleCount =
         let testCount = max 10 (min sampleCount testingSamplesCount)
-        save stateFile net
+        save sessionName net
         let correctCount =
             testingSamples.[0..(testCount - 1)]
             |> Array.map (fun s ->  
@@ -92,13 +93,14 @@ let mnist trainSize =
 
 
     let onIncrement start newStart net =
-        let startFile = sprintf "%s-%s" stateFile (start.ToString().PadLeft(5, '0'))
+        let startFile = sprintf "%s-%s" sessionName (start.ToString().PadLeft(5, '0'))
         save startFile net
-        let newStartFile = sprintf "%s-%s" stateFile (newStart.ToString().PadLeft(5, '0'))
+        let newStartFile = sprintf "%s-%s" sessionName (newStart.ToString().PadLeft(5, '0'))
         save newStartFile net
 
     printfn "Starting first cycle..."
     printfn ""
+    writeLog(["# Start sampleCount | correctCount | cost | testPercent | costReduction<10"])
 
     trainIncrementally net learnRate trainingSamples checkResult checkDone trainSize testNet onIncrement
     |> ignore

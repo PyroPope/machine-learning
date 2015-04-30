@@ -4,8 +4,10 @@ open System
 open System.IO
 open System.Text.RegularExpressions
 
+open Persistence
+
 let private primes =
-    __SOURCE_DIRECTORY__  + "\data\TheFirst10,000Primes.txt"
+    dataDir  + "\TheFirst10,000Primes.txt"
     |> File.ReadAllLines
     |> Array.filter  (fun l ->  Regex.IsMatch(l, @"^\s*\d"))
     |> Array.collect  (fun l -> Regex.Split(l, @"\s+", RegexOptions.Singleline))

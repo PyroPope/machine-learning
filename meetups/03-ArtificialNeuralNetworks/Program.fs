@@ -12,9 +12,11 @@ let main argv =
     //CompareTheSampleDotCom.compare()
     //xor()
     
-    let trainSize = if argv.Length > 0 then int argv.[0] else 40
-    mnist trainSize
-    
+    let session = argv.[0]
+    let learnRate = float argv.[1]
+    let trainSize = int argv.[2]   
+    mnist  session learnRate trainSize
+
     printfn "Done."
     Console.ReadKey() |> ignore
     0

@@ -21,12 +21,30 @@ let textAsNet text =
     Regex.Split((insideBrackets text), @"(?<=  \]);") |> Array.map textAsLayer |> List.ofArray
 
 
+let private appRoot =  DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent
 
-let fileBase name = 
-    let dirPath = Path.Combine(__SOURCE_DIRECTORY__,  "state")
-    Directory.CreateDirectory dirPath |> ignore
-    Path.Combine(dirPath, name)
+let private getChildDirectory childName = 
+    Path.Combine(appRoot.FullName, childName)
+    |> Directory.CreateDirectory
+    |> (fun di -> di.FullName)
+    
+let private stateDir = getChildDirectory "state"
 
+let private fileBase sessionName = 
+    Path.Combine(stateDir, sessionName)
+
+let dataDir = getChildDirectory "data"
+
+let logFile = Path.Combine(stateDir, "log.txt") 
+let writeLog parts =
+    use stream = new FileStream(logFile, FileMode.OpenOrCreate)
+    stream.Seek(0L, SeekOrigin.End) |> ignore
+    use writer = new StreamWriter(stream)
+    let timeStamp = DateTime.UtcNow.ToString("s")
+    writer.WriteLine(String.Join("|", timeStamp::(parts |> List.map (string))))
+    writer.Flush()
+    stream.Flush()
+    
 let save name net =
     let writeFile path text =
         use stream = new FileStream(path, FileMode.CreateNew)

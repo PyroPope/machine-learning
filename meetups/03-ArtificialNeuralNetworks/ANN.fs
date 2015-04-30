@@ -31,6 +31,14 @@ let rec private mTranspose  = function
     | (_::_)::_ as M -> List.map List.head M :: mTranspose (List.map List.tail M)
     | _ -> []
 
+let rec t2 m = 
+    seq{
+        match m with
+        | (_::_)::_ -> 
+            yield List.map List.head m
+            yield! t2 (List.map List.tail m)
+        | _ -> ()}
+
 let private mIdentity size =
     [for x in [1..size] -> [for y in [1..size] -> if x = y then 1. else 0.]]
 
@@ -46,8 +54,8 @@ type BackPropagationResult = {
 type private BpData = {
     newNet : float list list list 
     values : float list
-    weightsBetween : float list list
-    outputLayerErrors : float list
+    weightsBetween : seq<float list>
+    outputLayerErrors : seq<float>
 }
 
 // BackPropagation 
@@ -56,18 +64,20 @@ let backPropagate net learnRate sample =
     let buildNewLayer layerInput oldLayer bpData =         
         let neuronErrors = 
             (bpData.weightsBetween, bpData.values) 
-            ||> List.map2 (fun weightsBetween value -> 
-                ((0., weightsBetween, bpData.outputLayerErrors) 
-                    |||> List.fold2 (fun s w e -> s + w*e)) * value * (1. - value))
+            ||> Seq.map2 (fun weightsBetween value -> 
+                ((0., Seq.zip weightsBetween bpData.outputLayerErrors) 
+                    ||> Seq.fold (fun s (w, e) -> s + w*e)) * value * (1. - value))          
+            |> List.ofSeq
         let newLayer =
             (oldLayer, neuronErrors) 
-                ||> List.map2 (fun oldNeuron neuronError ->
+                ||> Seq.map2 (fun oldNeuron neuronError ->
                 (bias::layerInput, oldNeuron) ||> List.map2 (fun input oldWeight -> 
                     oldWeight + learnRate * neuronError * input))
+                |> Seq.toList
         let newBpState = {
              newNet = newLayer::(bpData.newNet)
              values = layerInput 
-             weightsBetween = (mTranspose oldLayer).Tail
+             weightsBetween = Seq.skip 1 (t2 oldLayer)
              outputLayerErrors = neuronErrors}
         newBpState
 
