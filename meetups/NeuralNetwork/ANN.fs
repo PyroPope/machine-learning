@@ -27,9 +27,9 @@ let rec private bodyAndTail list =
     let r = (List.rev list)
     (List.rev r.Tail, r.Head)
    
-let rec private mTranspose  = function
-    | (_::_)::_ as M -> List.map List.head M :: mTranspose (List.map List.tail M)
-    | _ -> []
+//let rec mTranspose  = function
+//    | (_::_)::_ as M -> List.map List.head M :: mTranspose (List.map List.tail M)
+//    | _ -> []
 
 let rec t2 m = 
     seq{

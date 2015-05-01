@@ -92,7 +92,7 @@ let mnist sessionName learnRate trainSize =
     printfn "Learning Rate: %.2f" learnRate
 
 
-    let onIncrement start newStart net =
+    let onIncrement start learnRate newStart net =
         let startFile = sprintf "%s-%s" sessionName (start.ToString().PadLeft(5, '0'))
         save startFile net
         let newStartFile = sprintf "%s-%s" sessionName (newStart.ToString().PadLeft(5, '0'))

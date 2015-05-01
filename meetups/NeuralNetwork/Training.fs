@@ -48,30 +48,40 @@ let display r learnRate=
 let trainSample net learnRate sample =    
     backPropagate net learnRate sample
     
-//let calcCost results = 
-//    let errorsSquared = 
-//        results 
-//        |> List.map (fun r ->
-//            (0., r.output, r.sample.target) 
-//            |||> List.fold2 (fun s o t -> s + (t - o)**2.))
-//        |> List.sum
-//    errorsSquared / (2. * float results.Length)
+let calcCost results sampleCount= 
+    let errorsSquared = 
+        results 
+        |> Seq.map (fun r ->
+            (0., r.output, r.sample.target) 
+            |||> List.fold2 (fun s o t -> s + (t - o)**2.))
+        |> Seq.sum
+    errorsSquared / (2. * float sampleCount)
 
 let emptyBPResult = {sample = {input=[]; target=[]}; output = []; newNet = []}
 
 let private trainCycle net learnRate samples checkCorrect stats testNet =
     let start = now()
+    let sampleCount = List.length samples
+  
+    let bpr = { emptyBPResult  with newNet = net }
+    let sumErrSq = 0.
+    let correctCount = 0
+    let state = (bpr, sumErrSq, correctCount)
+    let lastResult, sumErrorSquared, correctCount = 
+        (state, samples) 
+        ||> Seq.fold (fun (bpr, ses, cc) s -> 
+            let bpr' = trainSample bpr.newNet learnRate s
+            let ses' = 
+                ses +                         
+                ((0., bpr'.output, bpr'.sample.target) 
+                    |||> List.fold2 (fun s o t -> s + (t - o)**2.))
+            let cc' = 
+                cc + match checkCorrect bpr' with | true -> 1 | false -> 0
+            (bpr', ses', cc')) 
+    
+    let cost = sumErrorSquared / (2. * float sampleCount)
 
-    let results = samples |> Seq.map (trainSample net learnRate)
-    let count, correctCount, errSqSum, lastResult = ((0, 0, 0.0, emptyBPResult), Seq.zip (Seq.ofList samples) results) ||> Seq.fold (fun (count, correctCount, errSqSum, lastResult) (sample, result)->
-        let errorSquare = (0., Seq.zip sample.target result.output) ||> Seq.fold (fun sum (t, o) -> sum + (t - o)**2.) 
-        let newCorrectCount = if checkCorrect result then correctCount + 1 else correctCount    
-        (count + 1, newCorrectCount, errSqSum + errorSquare, result ))
-
-    let sampleCount = count
-    let cost = errSqSum / (2. * float count)
     let costReduction = stats.lastCost - cost
-    let lastResult = lastResult
     {   net = lastResult.newNet
         cost = cost
         sampleCount = sampleCount
@@ -130,8 +140,9 @@ let trainIncrementally net learnRate samples checkCorrect checkDone start testNe
         | false ->
             let r = trainUntilWithStats net learnRate samples.[1..start] checkCorrect checkDone stats testNet
             let newStart = start + max 1 (start / 13)
-            onIncrement start newStart r.net
-            trainIncrementallyWithStats  r.net learnRate samples  newStart   stats
+            let newLearnRate = learnRate * 0.95
+            onIncrement start newStart learnRate r.net 
+            trainIncrementallyWithStats  r.net newLearnRate samples  newStart   stats
         | true ->
             trainUntilWithStats net learnRate samples checkCorrect checkDone stats testNet
     let x = trainIncrementallyWithStats net learnRate samples  start  stats
