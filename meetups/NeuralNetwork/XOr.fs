@@ -23,7 +23,6 @@ let xor() =
     let testNet _ _=  (0, 0)
     let learnRate = 0.9
     trainUntil net learnRate xorCases checkCorrect checkDone testNet |> ignore
-    //let x = trainIncrementally net xorCases checkCorrect checkDone 1
     ()
 
 

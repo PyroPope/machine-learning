@@ -7,13 +7,18 @@ open Training
 open Persistence
 
 let mnist sessionName learnRate trainSize =
-
+    
+    let defaultLayerSizes = [784; 500; 100; 10]
+    let learnFactor = 1.
+    let startFactor = 1.
+    let successFactor = 1.
+    
     printfn "Using state file: \"%s\"" sessionName
     let net = 
         match tryLoad sessionName with 
         // http://yann.lecun.com/exdb/mnist/  -> 500-100 
         // (wiki MNIST database) -> 784 [2500; 2000; 1500; 1000; 500] 10 
-        | None -> printf "Creating NEW net: "; createNet [784; 500; 100; 10]
+        | None -> printf "Creating NEW net: "; createNet defaultLayerSizes
         | Some(net) -> printf "Loading existing net: "; net
 
     let displayNetInfo =
@@ -57,16 +62,8 @@ let mnist sessionName learnRate trainSize =
         checkCorrect  bpResult.sample.target bpResult.output
 
     let checkDone cycleResult = 
-        if learnRate < 2. then
-            cycleResult.correctCount >= ((cycleResult.sampleCount *12) / 13)
-        else
-            let reduction = cycleResult.stats.costReduction
-            let cost = cycleResult.cost
-            cycleResult.correctCount >= ((cycleResult.sampleCount *12) / 13)
-            && reduction > 0.            
-            && (
-                (cost < 0.0005 && reduction < 0.0000010000)
-                || (cycleResult.cost < 0.02 && reduction < 0.0000003000 ))
+        cycleResult.correctCount >= int ( float cycleResult.sampleCount * successFactor)
+
 
     let testNet net sampleCount =
         let testCount = max 10 (min sampleCount testingSamplesCount)
@@ -102,7 +99,7 @@ let mnist sessionName learnRate trainSize =
     printfn ""
     writeLog(["# learnRate | sampleCount | correctCount | cost | testPercent | costReduction<10"])
 
-    trainIncrementally net learnRate trainingSamples checkResult checkDone trainSize testNet onIncrement
+    trainIncrementally net learnRate learnFactor trainingSamples checkResult checkDone trainSize startFactor testNet onIncrement
     |> ignore
 //    let jobTrainSamples = trainingSamples.[..(trainSize - 1)]
 //    trainUntil net learnRate jobTrainSamples checkResult checkDone testNet |> ignore

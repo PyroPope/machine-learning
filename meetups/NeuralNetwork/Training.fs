@@ -25,8 +25,6 @@ type CycleResult =
 
 let now() = DateTime.UtcNow
 
-
-
 let display r learnRate=
     printfn "Completed cycle %d" r.stats.cycleCount
     printfn "  cost:                   %.15f" r.cost
@@ -132,15 +130,15 @@ let private trainUntilWithStats net learnRate samples checkCorrect checkDone sta
 let trainUntil net learnRate samples checkCorrect checkDone =
      trainUntilWithStats net learnRate samples checkCorrect checkDone (createStats samples.Length)
 
-let trainIncrementally net learnRate samples checkCorrect checkDone start testNet onIncrement =
+let trainIncrementally net learnRate learnRateFactor samples checkCorrect checkDone start startFactor testNet onIncrement =
     let stats = createStats (Array.length samples)
     let rec trainIncrementallyWithStats net learnRate samples start  stats =
         let samplesLength = Array.length samples
         match start >= samplesLength with
         | false ->
             let r = trainUntilWithStats net learnRate samples.[1..start] checkCorrect checkDone stats testNet
-            let newStart = start + max 1 (start / 13)
-            let newLearnRate = learnRate * 0.95
+            let newStart = int (float start * startFactor)
+            let newLearnRate = learnRate * learnRateFactor
             onIncrement start newStart learnRate r.net 
             trainIncrementallyWithStats  r.net newLearnRate samples  newStart   stats
         | true ->

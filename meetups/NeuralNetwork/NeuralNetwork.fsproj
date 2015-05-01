@@ -38,7 +38,7 @@
     <DocumentationFile>
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
-    <StartArguments>"vs" 0.9 40</StartArguments>
+    <StartArguments>"vs" 0.01 60</StartArguments>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
