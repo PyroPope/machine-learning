@@ -9,8 +9,7 @@ type SessionStats =
         duration : TimeSpan
         lastCost: float
         costReduction : float
-        cycleCount : int
-    }
+        cycleCount : int }
 
 type CycleResult =
     {   net : float list list list
@@ -21,7 +20,7 @@ type CycleResult =
         duration : TimeSpan
         lastResult : BackPropagationResult 
         testNetResult : int * int
-        stats : SessionStats}
+        stats : SessionStats }
 
 let now() = DateTime.UtcNow
 
@@ -78,8 +77,8 @@ let private trainCycle net learnRate samples checkCorrect stats testNet =
             (bpr', ses', cc')) 
     
     let cost = sumErrorSquared / (2. * float sampleCount)
-
     let costReduction = stats.lastCost - cost
+
     {   net = lastResult.newNet
         cost = cost
         sampleCount = sampleCount
@@ -89,20 +88,18 @@ let private trainCycle net learnRate samples checkCorrect stats testNet =
         lastResult = lastResult 
         testNetResult = testNet lastResult.newNet sampleCount
         stats = 
-        { stats with 
+        { stats with                 
             duration = stats.start - now()
             cycleCount = stats.cycleCount + 1
             lastCost = cost
-            costReduction = costReduction
-            }}
+            costReduction = costReduction }}
 
-let private createStats samplesLength = {
-        start = now()
+let private createStats samplesLength = 
+    {   start = now()
         duration = TimeSpan.Zero
         cycleCount = 0  
         lastCost = 0.
-        costReduction = 2.
-        }
+        costReduction = 2. }
 
 let trainSeries net learnRate samples checkCorrect testNet =
     trainCycle net  learnRate samples checkCorrect (createStats samples.Length) testNet
@@ -143,5 +140,4 @@ let trainIncrementally net learnRate learnRateFactor samples checkCorrect checkD
             trainIncrementallyWithStats  r.net newLearnRate samples  newStart   stats
         | true ->
             trainUntilWithStats net learnRate samples checkCorrect checkDone stats testNet
-    let x = trainIncrementallyWithStats net learnRate samples  start  stats
-    x
+    trainIncrementallyWithStats net learnRate samples  start  stats

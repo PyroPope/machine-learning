@@ -7,7 +7,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "01-LinearRegression", "01-L
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "02-NeuralNet", "02-NuralNet\02-NeuralNet.fsproj", "{68DC5A01-3B17-4472-868E-C28636648A10}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NeuralNetwork", "NeuralNetwork\NeuralNetwork.fsproj", "{E08A1C37-32E5-4B7B-BD26-17254DB87F4F}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp-Neural-Network", "NeuralNetwork\FSharp-Neural-Network.fsproj", "{E08A1C37-32E5-4B7B-BD26-17254DB87F4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

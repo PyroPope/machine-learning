@@ -12,12 +12,13 @@ let createNet layerSizes =
     (([], layerSizes) ||> List.scan createLayer).Tail.Tail
 
 // FeedForward
+let sigmoidActivation x = 1. / (1. + exp -x)
 let evaluateLayers net learnRate  inputs =
     (inputs, net) ||> List.scan (fun inputs layer ->
         layer |> List.map (fun neuron ->
             (0., neuron, bias::inputs)
             |||> List.fold2 (fun sum weight input-> sum + weight * input)
-            |> (fun sum -> 1. / (1. + exp -sum))))
+            |> sigmoidActivation))
 
 let feedForward net learnRate inputs =
     evaluateLayers net learnRate inputs |> List.reduce (fun _ l -> l)
@@ -43,20 +44,20 @@ let private mIdentity size =
     [for x in [1..size] -> [for y in [1..size] -> if x = y then 1. else 0.]]
 
 // BackPropagation types
-type Sample = {input : float list; target : float list}
+type Sample = {
+    input : float list  
+    target : float list }
 
 type BackPropagationResult = {
     sample : Sample
     output : float list
-    newNet : float list list list
-}
+    newNet : float list list list }
 
 type private BpData = {
     newNet : float list list list 
     values : float list
     weightsBetween : seq<float list>
-    outputLayerErrors : seq<float>
-}
+    outputLayerErrors : seq<float> }
 
 // BackPropagation 
 let backPropagate net learnRate sample =
@@ -96,5 +97,4 @@ let backPropagate net learnRate sample =
     {
         sample = sample
         output = output
-        newNet = finalBpState.newNet
-    }
+        newNet = finalBpState.newNet }
