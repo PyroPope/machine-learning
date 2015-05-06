@@ -1,3 +1,9 @@
 *
 
 !.gitignore
+.gitignore
+!images.7z
+!mkimages.py
+!testing.csv
+!TheFirst10,000Primes.txt
+!training.csv
