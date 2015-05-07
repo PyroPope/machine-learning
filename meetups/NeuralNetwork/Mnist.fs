@@ -43,7 +43,7 @@ let mnist sessionName learnRate trainSize =
         tuples 
         |> Array.map (fun (input, target) -> {input=input; target=target})
 
-    let mnistTups = MnistData.mnistData
+    let mnistTups = MnistData.mnistTraining
     let trainingSamples = tup2Sample (fst mnistTups)
     printf "%d training, " trainingSamples.Length
     let testingSamples = tup2Sample (snd mnistTups)
@@ -71,7 +71,7 @@ let mnist sessionName learnRate trainSize =
         let correctCount =
             testingSamples.[0..(testCount - 1)]
             |> Array.map (fun s ->  
-                checkCorrect s.target (feedForward net learnRate s.input))
+                checkCorrect s.target (feedForward net s.input))
             |> Array.filter (fun b -> b)
             |> Array.length
         (correctCount, testCount)

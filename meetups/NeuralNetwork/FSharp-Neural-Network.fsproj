@@ -38,7 +38,7 @@
     <DocumentationFile>
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
-    <StartArguments>"debug" 0.1 60</StartArguments>
+    <StartArguments>"debug" 0.1 20</StartArguments>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -59,6 +59,7 @@
     <Compile Include="XOr.fs" />
     <Compile Include="MnistData.fs" />
     <Compile Include="Mnist.fs" />
+    <Compile Include="MnistRead.fs" />
     <Compile Include="Program.fs" />
     <None Include="ReadMe.md" />
   </ItemGroup>

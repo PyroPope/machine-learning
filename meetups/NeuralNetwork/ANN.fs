@@ -13,15 +13,15 @@ let createNet layerSizes =
 
 // FeedForward
 let sigmoidActivation x = 1. / (1. + exp -x)
-let evaluateLayers net learnRate  inputs =
+let evaluateLayers net inputs =
     (inputs, net) ||> List.scan (fun inputs layer ->
         layer |> List.map (fun neuron ->
             (0., neuron, bias::inputs)
             |||> List.fold2 (fun sum weight input-> sum + weight * input)
             |> sigmoidActivation))
 
-let feedForward net learnRate inputs =
-    evaluateLayers net learnRate inputs |> List.reduce (fun _ l -> l)
+let feedForward net inputs =
+    evaluateLayers net inputs |> List.reduce (fun _ l -> l)
 
 // BackPropagation helper functions...
 let rec private bodyAndTail list =
@@ -82,7 +82,7 @@ let backPropagate net learnRate sample =
              outputLayerErrors = neuronErrors}
         newBpState
 
-    let allValues = evaluateLayers net learnRate sample.input
+    let allValues = evaluateLayers net sample.input
     let inputsByLayer, output = bodyAndTail allValues
 
     let initialBpState = {

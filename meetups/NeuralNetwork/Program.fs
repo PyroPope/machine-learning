@@ -13,9 +13,11 @@ let main argv =
     //xor()
     
     let session = argv.[0]
-    let learnRate = float argv.[1]
-    let trainSize = int argv.[2]   
-    mnist  session learnRate trainSize
+    let learnrate = float argv.[1]
+    let trainsize = int argv.[2]   
+    mnist  session learnrate trainsize
+
+    //MnistRead.readDigits()
 
     printfn "Done."
     Console.ReadKey() |> ignore

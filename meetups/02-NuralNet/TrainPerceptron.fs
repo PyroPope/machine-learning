@@ -29,7 +29,7 @@ let learningConstant = 0.1
 let bias = 1.0
 
 let activate sum =
-    if sum > 0.0 then 1 else -1
+    if sum > 0. then 1 else -1
 
 let feedforward  weights inputs =
     let sum = (0.0, bias::inputs, weights) |||> List.fold2 (fun sum input weight -> sum + input * weight) 

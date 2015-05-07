@@ -28,7 +28,7 @@ let private getChildDirectory childName =
     |> Directory.CreateDirectory
     |> (fun di -> di.FullName)
     
-let private stateDir = getChildDirectory "state"
+let stateDir = getChildDirectory "state"
 
 let private fileBase sessionName = 
     Path.Combine(stateDir, sessionName)
