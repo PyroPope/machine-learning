@@ -11,10 +11,10 @@ let readRows fileName =
         |> Array.map (fun fields -> fields |> Array.toList |> List.map (float))  
         
 
-let mnistTraining =
+let mnistTraining minValue =
     let buildAnswerList count index  =
-        [for i in 0.0..(count - 1.0) -> if i = index then 1.0 else 0.0]
-    let trainValues = readRows @"training.csv"
+        [for i in 0.0..(count - 1.0) -> if i = index then 1.0 else minValue]
+    //let trainValues = readRows @"training.csv"
     let availableSamples =            
             readRows @"training.csv"
             |> Array.map (fun fields ->

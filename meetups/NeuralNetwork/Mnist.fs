@@ -12,6 +12,8 @@ let mnist sessionName learnRate trainSize =
     let learnFactor = 1.
     let startFactor = 1.
     let successFactor = 1.
+    let activation = sigmoidActivation
+    //let activation = sigmoidActivation
     
     printfn "Using state file: \"%s\"" sessionName
     let net = 
@@ -43,7 +45,7 @@ let mnist sessionName learnRate trainSize =
         tuples 
         |> Array.map (fun (input, target) -> {input=input; target=target})
 
-    let mnistTups = MnistData.mnistTraining
+    let mnistTups = MnistData.mnistTraining activation.minValue
     let trainingSamples = tup2Sample (fst mnistTups)
     printf "%d training, " trainingSamples.Length
     let testingSamples = tup2Sample (snd mnistTups)
@@ -56,7 +58,8 @@ let mnist sessionName learnRate trainSize =
             |> List.mapi(fun i l -> i, l)
             |> List.maxBy snd
             |> fst
-        maxIndex answer = maxIndex output
+        let correct = maxIndex answer = maxIndex output
+        correct
 
     let checkResult bpResult =
         checkCorrect  bpResult.sample.target bpResult.output
@@ -65,22 +68,22 @@ let mnist sessionName learnRate trainSize =
         cycleResult.correctCount >= int ( float cycleResult.sampleCount * successFactor)
 
 
-    let testNet net sampleCount =
+    let testNet net activation sampleCount =
         let testCount = max 10 (min sampleCount testingSamplesCount)
         save sessionName net
         let correctCount =
             testingSamples.[0..(testCount - 1)]
             |> Array.map (fun s ->  
-                checkCorrect s.target (feedForward net s.input))
+                checkCorrect s.target (feedForward net activation s.input))
             |> Array.filter (fun b -> b)
             |> Array.length
         (correctCount, testCount)
 
-    let primePump = testNet net 1
+    let primePump = testNet net activation 1
     let initialAccuracy size label = 
         printf "Initial accuracy, %s: " label
         let start = now()
-        let right, count = testNet net size
+        let right, count = testNet net activation size
         let duration = now() - start
         let correctPercent = 100.0 * float right / float count
         printfn " %.2f%% %d/%d in %.1fs" correctPercent right count duration.TotalSeconds
@@ -89,7 +92,7 @@ let mnist sessionName learnRate trainSize =
     printfn "Learning Rate: %.2f" learnRate
 
 
-    let onIncrement start learnRate newStart net =
+    let onIncrement start newStart net =
         let startFile = sprintf "%s-%s" sessionName (start.ToString().PadLeft(5, '0'))
         save startFile net
         let newStartFile = sprintf "%s-%s" sessionName (newStart.ToString().PadLeft(5, '0'))
@@ -99,7 +102,7 @@ let mnist sessionName learnRate trainSize =
     printfn ""
     writeLog(["# learnRate | sampleCount | correctCount | cost | testPercent | costReduction<10"])
 
-    trainIncrementally net learnRate learnFactor trainingSamples checkResult checkDone trainSize startFactor testNet onIncrement
+    trainIncrementally net activation learnFactor trainingSamples checkResult checkDone trainSize startFactor testNet onIncrement
     |> ignore
 //    let jobTrainSamples = trainingSamples.[..(trainSize - 1)]
 //    trainUntil net learnRate jobTrainSamples checkResult checkDone testNet |> ignore

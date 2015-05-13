@@ -56,7 +56,7 @@ let calcCost results sampleCount=
 
 let emptyBPResult = {sample = {input=[]; target=[]}; output = []; newNet = []}
 
-let private trainCycle net learnRate samples checkCorrect stats testNet =
+let private trainCycle net activation samples checkCorrect stats testNet =
     let start = now()
     let sampleCount = List.length samples
   
@@ -67,7 +67,7 @@ let private trainCycle net learnRate samples checkCorrect stats testNet =
     let lastResult, sumErrorSquared, correctCount = 
         (state, samples) 
         ||> Seq.fold (fun (bpr, ses, cc) s -> 
-            let bpr' = trainSample bpr.newNet learnRate s
+            let bpr' = trainSample bpr.newNet activation s
             let ses' = 
                 ses +                         
                 ((0., bpr'.output, bpr'.sample.target) 
@@ -86,7 +86,7 @@ let private trainCycle net learnRate samples checkCorrect stats testNet =
         startTime = start
         duration = now() - start
         lastResult = lastResult 
-        testNetResult = testNet lastResult.newNet sampleCount
+        testNetResult = testNet lastResult.newNet activation sampleCount 
         stats = 
         { stats with                 
             duration = stats.start - now()
@@ -127,17 +127,17 @@ let private trainUntilWithStats net learnRate samples checkCorrect checkDone sta
 let trainUntil net learnRate samples checkCorrect checkDone =
      trainUntilWithStats net learnRate samples checkCorrect checkDone (createStats samples.Length)
 
-let trainIncrementally net learnRate learnRateFactor samples checkCorrect checkDone start startFactor testNet onIncrement =
+let trainIncrementally net activation learnRateFactor samples checkCorrect checkDone start startFactor testNet onIncrement =
     let stats = createStats (Array.length samples)
-    let rec trainIncrementallyWithStats net learnRate samples start  stats =
+    let rec trainIncrementallyWithStats net activation samples start  stats =
         let samplesLength = Array.length samples
         match start >= samplesLength with
         | false ->
-            let r = trainUntilWithStats net learnRate samples.[1..start] checkCorrect checkDone stats testNet
+            let r = trainUntilWithStats net activation samples.[1..start] checkCorrect checkDone stats testNet
             let newStart = int (float start * startFactor)
-            let newLearnRate = learnRate * learnRateFactor
-            onIncrement start newStart learnRate r.net 
-            trainIncrementallyWithStats  r.net newLearnRate samples  newStart   stats
+            let newActivation =  {activation with learnRate = activation.learnRate * learnRateFactor}
+            onIncrement start newStart  r.net 
+            trainIncrementallyWithStats  r.net newActivation samples  newStart   stats
         | true ->
-            trainUntilWithStats net learnRate samples checkCorrect checkDone stats testNet
-    trainIncrementallyWithStats net learnRate samples  start  stats
+            trainUntilWithStats net activation samples checkCorrect checkDone stats testNet
+    trainIncrementallyWithStats net activation samples  start  stats

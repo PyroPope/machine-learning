@@ -28,7 +28,7 @@ let readDigits() =
     printf "Reading... "
     let guesses = 
         data 
-        |> Seq.map (ANN.feedForward net)
+        |> Seq.map (feedForward net sigmoidActivation)
         |> Seq.map maxIndex
     printfn "done"
     printf "Writing... "

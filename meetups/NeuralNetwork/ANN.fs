@@ -2,6 +2,24 @@
 
 let bias = 1.
 
+type Activation = {
+    learnRate : float
+    activate : float -> float
+    derivative : float -> float 
+    minValue : float }
+
+let sigmoidActivation = {
+    learnRate = 0.1
+    activate = (fun x -> 1. / (1. + exp -x))
+    derivative = (fun x -> x * (1. - x))
+    minValue = 0. }
+
+let tanhActivationx = {
+    learnRate = 0.1
+    activate = tanh
+    derivative = (fun x -> 1. - (x ** 2.))
+    minValue = -1. }
+
 // Creating
 let rnd = System.Random()
 let createNet layerSizes =    
@@ -12,16 +30,15 @@ let createNet layerSizes =
     (([], layerSizes) ||> List.scan createLayer).Tail.Tail
 
 // FeedForward
-let sigmoidActivation x = 1. / (1. + exp -x)
-let evaluateLayers net inputs =
+let evaluateLayers net activation inputs =
     (inputs, net) ||> List.scan (fun inputs layer ->
         layer |> List.map (fun neuron ->
             (0., neuron, bias::inputs)
             |||> List.fold2 (fun sum weight input-> sum + weight * input)
-            |> sigmoidActivation))
+            |> activation.activate))
 
-let feedForward net inputs =
-    evaluateLayers net inputs |> List.reduce (fun _ l -> l)
+let feedForward net activation inputs =
+    evaluateLayers net activation inputs |> List.reduce (fun _ l -> l)
 
 // BackPropagation helper functions...
 let rec private bodyAndTail list =
@@ -60,20 +77,20 @@ type private BpData = {
     outputLayerErrors : seq<float> }
 
 // BackPropagation 
-let backPropagate net learnRate sample =
+let backPropagate net activation sample =
     
     let buildNewLayer layerInput oldLayer bpData =         
         let neuronErrors = 
             (bpData.weightsBetween, bpData.values) 
             ||> Seq.map2 (fun weightsBetween value -> 
                 ((0., Seq.zip weightsBetween bpData.outputLayerErrors) 
-                    ||> Seq.fold (fun s (w, e) -> s + w*e)) * value * (1. - value))          
+                    ||> Seq.fold (fun s (w, e) -> s + w*e)) * (activation.derivative value))          
             |> List.ofSeq
         let newLayer =
             (oldLayer, neuronErrors) 
                 ||> Seq.map2 (fun oldNeuron neuronError ->
                 (bias::layerInput, oldNeuron) ||> List.map2 (fun input oldWeight -> 
-                    oldWeight + learnRate * neuronError * input))
+                    oldWeight + activation.learnRate * neuronError * input))
                 |> Seq.toList
         let newBpState = {
              newNet = newLayer::(bpData.newNet)
@@ -82,7 +99,7 @@ let backPropagate net learnRate sample =
              outputLayerErrors = neuronErrors}
         newBpState
 
-    let allValues = evaluateLayers net sample.input
+    let allValues = evaluateLayers net activation sample.input
     let inputsByLayer, output = bodyAndTail allValues
 
     let initialBpState = {

@@ -20,9 +20,12 @@ let xor() =
         | _ -> failwith "doh!"
     let checkDone result =
         result.cost < 0.001
-    let testNet _ _=  (0, 0)
-    let learnRate = 0.9
-    trainUntil net learnRate xorCases checkCorrect checkDone testNet |> ignore
+
+    let testNet _ _ _=  (0, 0)
+    
+    let activation =  sigmoidActivation
+
+    trainUntil net activation xorCases checkCorrect checkDone testNet |> ignore
     ()
 
 
