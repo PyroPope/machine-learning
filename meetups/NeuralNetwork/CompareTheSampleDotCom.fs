@@ -11,7 +11,7 @@ let compare() =
                         [0.1941121234; -0.3058878766; 0.1; 0.1941121234]];
                         [[0.2180521704; -0.2608288463; -0.1380250675]]]   
     
-    let activation = sigmoidActivation
+    let activation = {sigmoidActivation with learnRate=0.9}
 
     let newNet = (backPropagate net activation sample).newNet
     printfn "newNet   \r\n%A" newNet

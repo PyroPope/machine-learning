@@ -14,7 +14,7 @@ let sigmoidActivation = {
     derivative = (fun x -> x * (1. - x))
     minValue = 0. }
 
-let tanhActivationx = {
+let tanhActivation = {
     learnRate = 0.1
     activate = tanh
     derivative = (fun x -> 1. - (x ** 2.))

@@ -18,6 +18,7 @@ let xor() =
         | 0. -> result.output.Head < 0.1
         | 1. -> result.output.Head > 0.9
         | _ -> failwith "doh!"
+
     let checkDone result =
         result.cost < 0.001
 

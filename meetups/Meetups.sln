@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.22823.1
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "01-LinearRegression", "01-LinearRegression\Naive\01-LinearRegression.fsproj", "{584F6B10-EE0F-4BC1-8894-278A80D6818D}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "02-NeuralNet", "02-NuralNet\02-NeuralNet.fsproj", "{68DC5A01-3B17-4472-868E-C28636648A10}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp-Neural-Network", "NeuralNetwork\FSharp-Neural-Network.fsproj", "{E08A1C37-32E5-4B7B-BD26-17254DB87F4F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharp-Neural-Network", "CSharp-Neural-Network\CSharp-Neural-Network.csproj", "{3099B2BE-DFA8-42C9-ADEB-AEAA80206F1C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{E08A1C37-32E5-4B7B-BD26-17254DB87F4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E08A1C37-32E5-4B7B-BD26-17254DB87F4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E08A1C37-32E5-4B7B-BD26-17254DB87F4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3099B2BE-DFA8-42C9-ADEB-AEAA80206F1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3099B2BE-DFA8-42C9-ADEB-AEAA80206F1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3099B2BE-DFA8-42C9-ADEB-AEAA80206F1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3099B2BE-DFA8-42C9-ADEB-AEAA80206F1C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

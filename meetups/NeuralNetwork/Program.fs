@@ -9,8 +9,8 @@ open Mnist
 let main argv =
     printfn "Hello"
     
-    //CompareTheSampleDotCom.compare()
-    //xor()
+//    CompareTheSampleDotCom.compare()
+//    xor()
     
     let session = argv.[0]
     let learnrate = float argv.[1]

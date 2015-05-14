@@ -12,8 +12,7 @@ let mnist sessionName learnRate trainSize =
     let learnFactor = 1.
     let startFactor = 1.
     let successFactor = 1.
-    let activation = sigmoidActivation
-    //let activation = sigmoidActivation
+    let activation = {sigmoidActivation with learnRate = learnRate}
     
     printfn "Using state file: \"%s\"" sessionName
     let net = 
@@ -89,7 +88,7 @@ let mnist sessionName learnRate trainSize =
         printfn " %.2f%% %d/%d in %.1fs" correctPercent right count duration.TotalSeconds
     initialAccuracy testingSamplesCount "all"
     initialAccuracy trainSize "stats"
-    printfn "Learning Rate: %.2f" learnRate
+    printfn "Learning Rate: %.5f" learnRate
 
 
     let onIncrement start newStart net =
