@@ -9,12 +9,13 @@ namespace CSharp_Neural_Network
 
     class InputLayer : Layer
     {
-        readonly Neuron[] neurons;
+        readonly ValueNeuron[] neurons; // inputNeurons + Bias
+
         public InputLayer(int size)
         {
-            var neurons = new Neuron[size + 1];
+            var neurons = new ValueNeuron[size + 1];
             for (int i = 0; i < size; i++)
-                neurons[i] = new InputNeuron();
+                neurons[i] =  new ValueNeuron();
             neurons[size] = new BiasNeuron();
             this.neurons = neurons;
         }
@@ -24,33 +25,13 @@ namespace CSharp_Neural_Network
             get { return neurons; }
         }
 
-        public void SetValues(double[] input)
+        public void SetInputValues(double[] input)
         {
             for (int i = 0; i < input.Length; i++)
-                ((InputNeuron)neurons[i]).SetValue(input[i]);
+                neurons[i].SetValue(input[i]);
         }
 
-        class InputNeuron : Neuron
-        {
-            public InputNeuron() : base(null)
-            {}
 
-            public void SetValue(double value)
-            {
-                Value = value;
-            }
-
-            public override void FeedForward()
-            {
-                // do nothing
-            }
-
-            public override void PropagateBack()
-            {
-                // do nothing
-            }
-
-        }
 
     }
 }

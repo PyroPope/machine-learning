@@ -16,6 +16,11 @@ namespace CSharp_Neural_Network
                 neuron.FeedForward();
         }
 
+        public void PropagateBack()
+        {
+            foreach (var neuron in Neurons)
+                neuron.PropagateBack();
+        }
 
     }
 }

@@ -10,32 +10,35 @@ namespace CSharp_Neural_Network
     {
         readonly InputLayer inputLayer;
         readonly OutputLayer outputLayer;
+        readonly Activation activation;
 
-        public Network(Activation activation, int inputSize, int outputSize)
+        public Network(Activation activation, TrainingInfo trainInfo, int inputSize, int outputSize)
         {
+            this.activation = activation;
             this.inputLayer = new InputLayer(inputSize);
-            this.outputLayer = new OutputLayer(activation, outputSize);
+            this.outputLayer = new OutputLayer(activation, trainInfo, outputSize);
             ConnectLayers(inputLayer, outputLayer);
-        }
-
-        static Random rnd = new Random();
-        double GetRandomWeight()
-        {
-            return (rnd.NextDouble() * 2) - 1;
         }
 
         void ConnectLayers(Layer fromLayer, Layer toLayer)
         {
             foreach (var from in fromLayer.Neurons)
                 foreach (var to in toLayer.Neurons)
-                    new Connection(from, to, GetRandomWeight());
+                    new Connection(from, to, activation.GetRandomWeight());
         }
 
         public double[] FeedForward(double[] input)
         {
-            inputLayer.SetValues(input);
+            inputLayer.SetInputValues(input);
             outputLayer.FeedForward();
             return outputLayer.Values;
         }
+
+        public void PropagateBack(double[] target)
+        {
+            outputLayer.SetTargetValues(target);
+            outputLayer.PropagateBack();
+        }
+
     }
 }

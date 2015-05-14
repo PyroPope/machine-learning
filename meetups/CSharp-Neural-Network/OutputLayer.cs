@@ -10,11 +10,11 @@ namespace CSharp_Neural_Network
     {
         readonly OutputNeuron[] neurons;
 
-        public OutputLayer(Activation activation, int size)
+        public OutputLayer(Activation activation, TrainingInfo trainInfo, int size)
         {
             var neurons = new OutputNeuron[size];
             for (int i = 0; i < size; i++)
-                neurons[i] = new OutputNeuron(activation);
+                neurons[i] = new OutputNeuron(activation, trainInfo);
             this.neurons = neurons;
         }
 
@@ -31,10 +31,16 @@ namespace CSharp_Neural_Network
             }
         }
 
+        public void SetTargetValues(double[] targetValues)
+        {
+            for (int i = 0; i < targetValues.Length; i++)
+                neurons[i].TargetValue = targetValues[i];
+        }
+
         class OutputNeuron : Neuron
         {
-            public OutputNeuron(Activation activation)
-                : base(activation)
+            public OutputNeuron(Activation activation, TrainingInfo trainInfo)
+                : base(activation, trainInfo)
             { }
 
             public override void FeedForward()
@@ -44,8 +50,16 @@ namespace CSharp_Neural_Network
 
             public override void PropagateBack()
             {
-                throw new NotImplementedException();
+                var valueDelta = TargetValue - Value;
+                Error = valueDelta *  activation.CalcDerivative(Value);
+
+                //Console.WriteLine(Error.ToString("n6"));
+
+                foreach (var conn in inboundConnections)
+                    conn.PropagateBack(trainInfo.LearnRate, Error);
             }
+
+            public double TargetValue { private get; set; }
         }
 
     }

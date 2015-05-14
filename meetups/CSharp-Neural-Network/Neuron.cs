@@ -9,9 +9,11 @@ namespace CSharp_Neural_Network
     abstract class Neuron
     {
         protected readonly Activation activation;
-        public Neuron(Activation activation)
+        protected readonly TrainingInfo trainInfo;
+        public Neuron(Activation activation, TrainingInfo trainInfo)
         {
             this.activation = activation;
+            this.trainInfo = trainInfo;
         }
  
         readonly protected List<Connection> inboundConnections = new List<Connection>();
