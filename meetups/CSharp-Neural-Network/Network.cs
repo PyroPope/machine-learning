@@ -13,28 +13,28 @@ namespace CSharp_Neural_Network
         readonly OutputLayer outputLayer;
         readonly Activation activation;
 
+        public int InputSize { get; private set; }
+        public int[] HiddenSizes { get; private set; }
+        public int OutputSize { get; private set; }
+
         public Network(int inputSize, int[] hiddenSizes, int outputSize, double learnRate)
             : this(Activation.Sigmoid, new TrainingInfo(learnRate), inputSize, hiddenSizes, outputSize)
         { }
 
         public Network(Activation activation, TrainingInfo trainInfo, int inputSize, int[] hiddenSizes, int outputSize)
         {
+            this.InputSize = inputSize;
+            this.HiddenSizes = hiddenSizes;
+            this.OutputSize = outputSize;
+
             this.activation = activation;
             this.inputLayer = new InputLayer(inputSize);
             this.hiddenLayers = hiddenSizes
                 .Select(size => new HiddenLayer(activation, trainInfo, size))
                 .ToArray();
-             this.outputLayer = new OutputLayer(activation, trainInfo, outputSize);
+            this.outputLayer = new OutputLayer(activation, trainInfo, outputSize);
             ConnectLayers();
-
-            this.InputSize = inputSize;
-            this.HiddenSizes = hiddenSizes;
-            this.OutputSize = outputSize;
         }
-
-        public int InputSize { get; private set; }
-        public int[] HiddenSizes { get; private set; }
-        public int OutputSize { get; private set; }
 
         void ConnectLayers()
         {
