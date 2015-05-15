@@ -40,26 +40,14 @@ namespace CSharp_Neural_Network
         class OutputNeuron : Neuron
         {
             public OutputNeuron(Activation activation, TrainingInfo trainInfo)
-                : base(activation, trainInfo)
-            { }
-
-            public override void FeedForward()
-            {
-                Value = CalcValue();
-            }
-
-            public override void PropagateBack()
-            {
-                var valueDelta = TargetValue - Value;
-                Error = valueDelta *  activation.CalcDerivative(Value);
-
-                //Console.WriteLine(Error.ToString("n6"));
-
-                foreach (var conn in inboundConnections)
-                    conn.PropagateBack(trainInfo.LearnRate, Error);
-            }
+                : base(activation, trainInfo) { }
 
             public double TargetValue { private get; set; }
+
+            protected override double CalcValueDelta()
+            {
+                return TargetValue - Value;
+            }
         }
 
     }

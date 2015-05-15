@@ -25,6 +25,11 @@ namespace CSharp_Neural_Network
             Value = value;
         }
 
+
+        protected override double CalcValueDelta()
+        {
+            throw new Exception("Don't expect CalcValueDelta to be called on a Value neuron because PropagateBack does nothing");
+        }
     }
 
     class BiasNeuron : ValueNeuron

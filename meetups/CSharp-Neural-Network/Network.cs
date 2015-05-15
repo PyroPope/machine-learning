@@ -9,27 +9,49 @@ namespace CSharp_Neural_Network
     class Network
     {
         readonly InputLayer inputLayer;
+        readonly HiddenLayer[] hiddenLayers;
         readonly OutputLayer outputLayer;
         readonly Activation activation;
 
-        public Network(Activation activation, TrainingInfo trainInfo, int inputSize, int outputSize)
+        public Network(Activation activation, TrainingInfo trainInfo, int inputSize, int[] hiddenSizes, int outputSize)
         {
             this.activation = activation;
             this.inputLayer = new InputLayer(inputSize);
-            this.outputLayer = new OutputLayer(activation, trainInfo, outputSize);
-            ConnectLayers(inputLayer, outputLayer);
+            this.hiddenLayers = hiddenSizes
+                .Select(size => new HiddenLayer(activation, trainInfo, size))
+                .ToArray();
+             this.outputLayer = new OutputLayer(activation, trainInfo, outputSize);
+            ConnectLayers();
         }
 
-        void ConnectLayers(Layer fromLayer, Layer toLayer)
+        void ConnectLayers()
         {
-            foreach (var from in fromLayer.Neurons)
-                foreach (var to in toLayer.Neurons)
-                    new Connection(from, to, activation.GetRandomWeight());
+            if (!hiddenLayers.Any())
+            {
+                ConnectAdjacentLayers(inputLayer, outputLayer);
+            }
+            else
+            {
+                var lastHiddenIndex = hiddenLayers.Length - 1;
+                ConnectAdjacentLayers(inputLayer, hiddenLayers[0]);
+                for (int i = 0; i < lastHiddenIndex; i++)
+                    ConnectAdjacentLayers(hiddenLayers[i], hiddenLayers[i + 1]);
+                ConnectAdjacentLayers(hiddenLayers[lastHiddenIndex], outputLayer);
+            }
+        }
+
+        void ConnectAdjacentLayers(Layer fromLayer, Layer toLayer)
+        {
+            foreach (var fromNeuron in fromLayer.Neurons)
+                foreach (var toNeuron in toLayer.Neurons)
+                    new Connection(fromNeuron, toNeuron, activation.GetRandomWeight());
         }
 
         public double[] FeedForward(double[] input)
         {
             inputLayer.SetInputValues(input);
+            foreach (var hiddenLayer in hiddenLayers)
+                hiddenLayer.FeedForward();
             outputLayer.FeedForward();
             return outputLayer.Values;
         }
@@ -38,6 +60,8 @@ namespace CSharp_Neural_Network
         {
             outputLayer.SetTargetValues(target);
             outputLayer.PropagateBack();
+            foreach (var hiddenLayer in hiddenLayers.Reverse())
+                hiddenLayer.PropagateBack();
         }
 
     }

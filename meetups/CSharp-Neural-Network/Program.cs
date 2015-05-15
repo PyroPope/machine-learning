@@ -31,18 +31,32 @@ namespace CSharp_Neural_Network
                 Sample.Create("1 1", "0"),
             };
 
+            var xorCases = new[]{
+                Sample.Create("0 0", "0"),
+                Sample.Create("0 1", "1"),
+                Sample.Create("1 0", "1"),
+                Sample.Create("1 1", "0"),
+            };
+
             var trainInfo = new TrainingInfo(0.1);
-            var net = new Network(Activation.Sigmoid, trainInfo, 2, 1);
+            var inputSize = 2;
+            var hiddenSizes = new int[] { 2 };
+            var outputSize = 1;
+            var net = new Network(Activation.Sigmoid, trainInfo, inputSize, hiddenSizes, outputSize);
 
             while (true)
             {
-                foreach (var s in nandCases)
+                foreach (var s in xorCases)
                 {
                     var output = net.FeedForward(s.input);
                     Console.WriteLine("{0} - {1:n3}", s.target[0], output[0]);
                     net.PropagateBack(s.target);
                 }
-                Console.ReadKey(); 
+                if (Console.KeyAvailable)
+                {
+                    Console.ReadKey();
+                    Console.ReadKey();
+                }
                 Console.WriteLine("============");
             }
 

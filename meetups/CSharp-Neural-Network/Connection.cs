@@ -23,23 +23,19 @@ namespace CSharp_Neural_Network
             this.weight = weight;
         }
 
-        double value;
-        public double Value
+        public double WeightedValue
         {
-            get { return (value = (from.Value *  weight)); }
+            get { return from.Value *  weight; }
         }
 
-        public double Error { get; private set; }
+        public double WeightedError { get; private set; }
 
         public void PropagateBack(double learnRate, double error)
         {
             // weightDelta  = learnRate * error * Xij  
-            //              = learnRate * error * (weight * fromValue)
-            //              = learnRate * error * value
-            //
+            //              = learnRate * toError * from.value?
 
-
-            Error = error * weight;
+            WeightedError = error * weight; //
 
             var weightDelta = learnRate * error * from.Value;
             weight += weightDelta;

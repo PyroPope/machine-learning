@@ -31,18 +31,25 @@ namespace CSharp_Neural_Network
         public double Value { get; protected set; }
 
         public double Error { get; protected set; }
-     
-        public abstract void FeedForward();
 
-        protected double CalcValue()
+        public virtual void FeedForward()
         {
             double sum = 0;
             foreach (var conn in inboundConnections)
-                sum += conn.Value;
-            return activation.CalcValue(sum);
-        }       
+                sum += conn.WeightedValue;
+            Value = activation.CalcValue(sum);
+        }
 
-        public abstract void PropagateBack();
+        public virtual void PropagateBack()
+        {
+            var valueDelta = CalcValueDelta();
+            Error = valueDelta * activation.CalcDerivative(Value);
+
+            foreach (var conn in inboundConnections)
+                conn.PropagateBack(trainInfo.LearnRate, Error);
+        }
+
+        abstract protected double CalcValueDelta();
 
     }
 
