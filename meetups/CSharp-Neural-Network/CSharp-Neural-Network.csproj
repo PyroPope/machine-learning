@@ -44,6 +44,8 @@
     <Compile Include="Activation.cs" />
     <Compile Include="HiddenLayer.cs" />
     <Compile Include="LogicGates.cs" />
+    <Compile Include="Mnist.cs" />
+    <Compile Include="MnistSamples.cs" />
     <Compile Include="Sample.cs" />
     <Compile Include="Trainer.cs" />
     <Compile Include="TrainingInfo.cs" />

@@ -25,7 +25,7 @@ namespace CSharp_Neural_Network
             return new Sample(inValues, targetValues);
         }
 
-        static Regex splitRx = new Regex(@"\s+", RegexOptions.Compiled);
+        static Regex splitRx = new Regex(@"[\s,]+", RegexOptions.Compiled);
         static double[] GetValues(string text)
         {
             var parts = splitRx.Split(text);
