@@ -20,7 +20,9 @@ namespace CSharp_Neural_Network
 
             var allSamples = File.ReadAllLines(dataFile)
                 .Skip(1)
-                .Select(line => Sample.Create(line.Substring(0,1), line.Substring(2)))
+                .Select(line => new Sample(
+                    Sample.GetValues(line.Substring(2)),
+                    GetTargetArray(line.Substring(0, 1))))
                 .ToArray();
             var testCount = allSamples.Length / 10;
             Training = new Sample[allSamples.Length - testCount];
@@ -29,5 +31,15 @@ namespace CSharp_Neural_Network
             if (testCount > 0)
                 Array.Copy(allSamples, Training.Length, Testing, 0, Testing.Length);
         }
+
+        static double[] GetTargetArray(string targetText)
+        {
+            var targetValue = int.Parse(targetText);
+            var targetArray = new double[10];
+            for (int i = 0; i < 10; i++)
+                targetArray[i] = i == targetValue ? 1 : 0;
+            return targetArray;
+        }
+
     }
 }

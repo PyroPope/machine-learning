@@ -10,7 +10,7 @@ namespace CSharp_Neural_Network
     {
         public static void Train(int trainingCount, double learnRate)
         {
-            Console.WriteLine("Starting MNIST trainging");
+            Console.WriteLine("Starting MNIST training");
             Console.Write("Loading samples... ");
             var mnistSamples = new MnistSamples();
             Console.WriteLine("done");
@@ -23,14 +23,23 @@ namespace CSharp_Neural_Network
             var testing = mnistSamples.Testing.Take(training.Length).ToArray();
 
             var trainer = new Trainer(net, training, CheckCorrect, testing);
-
+            trainer.TrainUntilDone(true);
         }
 
         static bool CheckCorrect(double[] target, double[] output)
         {
-
+            return IndexOfMaxValue(target) == IndexOfMaxValue(output);
         }
 
-       
+        static int IndexOfMaxValue(double[] numbers)
+        {
+            var index = 0;
+            return numbers
+                .Select(number => new { index = index++, number })
+                .OrderBy(t => t.number)
+                .Last().index;
+        }
+
+
     }
 }

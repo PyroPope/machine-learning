@@ -10,8 +10,8 @@ namespace CSharp_Neural_Network
     {
         static void Main(string[] args)
         {
-            LogicGates.Train();
-            //new MnistSamples();
+            //LogicGates.Train();
+            Mnist.Train(18900, 0.015);
             Console.ReadKey();
         }
     }
