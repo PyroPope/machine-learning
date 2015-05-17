@@ -8,11 +8,11 @@
     <ProjectGuid>e08a1c37-32e5-4b7b-bd26-17254db87f4f</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>_03_ArtificialNeuralNetworks</RootNamespace>
-    <AssemblyName>FsNN</AssemblyName>
+    <AssemblyName>NeuralNet</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
-    <Name>FSharp-Neural-Network</Name>
+    <Name>03-NeuralNetwork</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

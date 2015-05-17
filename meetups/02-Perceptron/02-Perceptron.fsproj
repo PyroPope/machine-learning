@@ -8,11 +8,11 @@
     <ProjectGuid>68dc5a01-3b17-4472-868e-c28636648a10</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>ML02</RootNamespace>
-    <AssemblyName>NuralNet</AssemblyName>
+    <AssemblyName>Perceptron</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
-    <Name>02-NeuralNet</Name>
+    <Name>02-Perceptron</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
