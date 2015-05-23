@@ -1,0 +1,45 @@
+https://github.com/it-depends/CPSG-ML/tree/master/meetups/03-NeuralNetwork
+
+1,000 MB
+
+Hello
+Using state file: "speedTest"
+Creating NEW net: [784-500-100-10], 443,610 connections
+Loading samples: 21089 training, 2343 testing
+Initial accuracy, all:  9.35% 219/2343 in 6.0s
+Initial accuracy, stats:  9.35% 219/2343 in 6.2s
+Learning Rate: 0.00150
+Starting first cycle...
+
+Completed cycle 1
+  cost:                   0.609244352782698
+  correct:                13.69% (2588 of 18900)
+  test:          17.71%
+  cycle time:    00:30:52
+  run time:      00:30:59
+  reduction<10: -6092443527.83
+
+Completed cycle 2
+  cost:                   0.461071906939397
+  correct:                20.42% (3860 of 18900)
+  test:          23.86%
+  cycle time:    00:33:08
+  run time:      01:04:14
+  reduction<10:  1481724458.43
+
+Completed cycle 3
+  cost:                   0.431901929364727
+  correct:                27.59% (5215 of 18900)
+  test:          32.86%
+  cycle time:    00:39:51
+  run time:      01:44:17
+  reduction<10:  291699775.75
+
+Completed cycle 4
+  cost:                   0.391435737485820
+  correct:                37.54% (7096 of 18900)
+  test:          41.78%
+  cycle time:    00:46:42
+  run time:      02:31:08
+  reduction<10:  404661918.79
+

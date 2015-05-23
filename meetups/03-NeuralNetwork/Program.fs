@@ -12,12 +12,12 @@ let main argv =
 //    CompareTheSampleDotCom.compare()
 //    xor()
     
-    let session = argv.[0]
-    let learnrate = float argv.[1]
-    let trainsize = int argv.[2]   
-    mnist  session learnrate trainsize
+//    let session = argv.[0]
+//    let learnrate = float argv.[1]
+//    let trainsize = int argv.[2]   
+//    mnist  session learnrate trainsize
 
-    //MnistRead.readDigits()
+    MnistRead.readDigits()
 
     printfn "Done."
     Console.ReadKey() |> ignore

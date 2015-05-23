@@ -1,0 +1,120 @@
+https://github.com/it-depends/Neural-Network-CSharp
+
+150MB
+
+Training Not:
+=============
+Got 2 training cases and 0 test cases
+Training: 50.00% correct (1/2)
+    Test: NaN% correct (0/0)
+Starting first epoch...
+================================
+Epoch 169 complete:
+Training: 100.00% correct (2/2)
+    Test: NaN% correct (0/0)
+Training time: 00:00
+   Epoch time: 00:00
+     Run time: 00:00
+================================
+All done.
+
+Training Or:
+============
+Got 4 training cases and 0 test cases
+Training: 75.00% correct (3/4)
+    Test: NaN% correct (0/0)
+Starting first epoch...
+================================
+Epoch 92 complete:
+Training: 100.00% correct (4/4)
+    Test: NaN% correct (0/0)
+Training time: 00:00
+   Epoch time: 00:00
+     Run time: 00:00
+================================
+All done.
+
+Training And:
+=============
+Got 4 training cases and 0 test cases
+Training: 50.00% correct (2/4)
+    Test: NaN% correct (0/0)
+Starting first epoch...
+================================
+Epoch 125 complete:
+Training: 100.00% correct (4/4)
+    Test: NaN% correct (0/0)
+Training time: 00:00
+   Epoch time: 00:00
+     Run time: 00:00
+================================
+All done.
+
+Training Nand:
+==============
+Got 4 training cases and 0 test cases
+Training: 25.00% correct (1/4)
+    Test: NaN% correct (0/0)
+Starting first epoch...
+================================
+Epoch 124 complete:
+Training: 100.00% correct (4/4)
+    Test: NaN% correct (0/0)
+Training time: 00:00
+   Epoch time: 00:00
+     Run time: 00:00
+================================
+All done.
+
+Training Xor:
+=============
+Got 4 training cases and 0 test cases
+Training: 0.00% correct (0/4)
+    Test: NaN% correct (0/0)
+Starting first epoch...
+================================
+Epoch 2774 complete:
+Training: 100.00% correct (4/4)
+    Test: NaN% correct (0/0)
+Training time: 00:00
+   Epoch time: 00:00
+     Run time: 00:00
+================================
+All done.
+
+Starting MNIST training
+Loading samples... done
+Creating network... done
+Got 18,900 training cases and 2,100 test cases
+Training: 13.81% correct (2,611/18,900)
+    Test: 13.95% correct (293/2,100)
+Starting first epoch...
+================================
+Epoch 1 complete:
+Training: 25.35% correct (4,792/18,900)
+    Test: 25.81% correct (542/2,100)
+Training time: 06:05
+   Epoch time: 09:50
+     Run time: 13:44
+================================
+Epoch 2 complete:
+Training: 31.70% correct (5,992/18,900)
+    Test: 32.29% correct (678/2,100)
+Training time: 05:45
+   Epoch time: 09:29
+     Run time: 23:13
+================================
+Epoch 3 complete:
+Training: 36.94% correct (6,982/18,900)
+    Test: 37.10% correct (779/2,100)
+Training time: 05:39
+   Epoch time: 09:19
+     Run time: 32:32
+================================
+Epoch 4 complete:
+Training: 41.62% correct (7,867/18,900)
+    Test: 41.33% correct (868/2,100)
+Training time: 06:12
+   Epoch time: 10:53
+     Run time: 43:26
+================================
