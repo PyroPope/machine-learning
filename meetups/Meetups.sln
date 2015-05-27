@@ -9,6 +9,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "02-Perceptron", "02-Percept
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "03-NeuralNetwork", "03-NeuralNetwork\03-NeuralNetwork.fsproj", "{E08A1C37-32E5-4B7B-BD26-17254DB87F4F}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "04-Clustering", "04-Clustering\src\04-Clustering.fsproj", "{572D0696-7502-46B0-817F-EE8C06DC0769}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{E08A1C37-32E5-4B7B-BD26-17254DB87F4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E08A1C37-32E5-4B7B-BD26-17254DB87F4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E08A1C37-32E5-4B7B-BD26-17254DB87F4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{572D0696-7502-46B0-817F-EE8C06DC0769}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{572D0696-7502-46B0-817F-EE8C06DC0769}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{572D0696-7502-46B0-817F-EE8C06DC0769}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{572D0696-7502-46B0-817F-EE8C06DC0769}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
