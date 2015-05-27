@@ -16,38 +16,55 @@ let main argv =
     let samples =
         Data.readRows "iris.data" 
         |> Array.map (fun row -> 
-        let vector = [|0..3|] |> Array.map (fun i -> float row.[i])
+        let vector = [| for i in 0..3 -> float row.[i] |]
         {   Vector = vector;
             SepalLength = vector.[0]
             SepalWidth = vector.[1]
             PetalLength = vector.[2]
             PetalWidth = vector.[3]
             Class = row.[4] })
+    
+    let vectors = [| for sample in samples -> sample.Vector |]
 
-    let getMinsAndMaxs vectors = 
+
+    let getMinsAndMaxsOfDimensins vectors = 
         let first = Seq.head vectors
         let mins = Array.copy first
         let maxs = Array.copy first
         vectors
-        |> Seq.iter (Array.iteri (fun i v ->
-            mins.[i] <- min mins.[i] v
-            maxs.[i] <- max maxs.[i] v
-        ))            
+        |> Seq.iter (Array.iteri (fun i value ->
+            mins.[i] <- min mins.[i] value
+            maxs.[i] <- max maxs.[i] value ))            
         mins, maxs
         
     let getCentroids count vectors =
-        let mins, maxs = getMinsAndMaxs vectors  
+        let mins, maxs = getMinsAndMaxsOfDimensins vectors  
         let difs = (maxs, mins) ||> Array.map2 (-)
         let rnd = new Random()
         let getCentroid() = 
             (difs, mins)
             ||> Array.map2 (fun dif min -> rnd.NextDouble() * dif + min)
-        [|1..count|] |> Array.map (fun _ -> getCentroid())
-            
+        [| for i in 1..count ->  getCentroid() |]
 
-    let vectors = samples |> Array.map (fun s -> s.Vector)
-    let centroids = getCentroids 3 vectors
+    let classCount = 
+        samples 
+        |> Array.distinctBy (fun iris -> iris.Class) 
+        |> Array.length
+    
+    let centroids = getCentroids classCount vectors
     printfn "%A" centroids
+
+    let distance A B =
+        (0., A, B) 
+        |||> Array.fold2 (fun sos a b -> sos + (b - a) ** 2.)
+        |> (sqrt)
+
+    let selectNearestPoint points origin  =
+        points |> Array.minBy (distance origin)
+    
+    let clusters = vectors |> Array.groupBy (selectNearestPoint centroids)   
+    
+    printfn "%A" clusters
 
     printfn "All done."; System.Console.ReadKey() |> ignore
     0
