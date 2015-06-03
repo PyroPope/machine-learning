@@ -27,7 +27,7 @@ let main argv =
     let vectors = [| for sample in samples -> sample.Vector |]
 
 
-    let getMinsAndMaxsOfDimensins vectors = 
+    let getMinsRangesAndMaxsOfDimensions vectors = 
         let first = Seq.head vectors
         let mins = Array.copy first
         let maxs = Array.copy first
@@ -35,17 +35,21 @@ let main argv =
         |> Seq.iter (Array.iteri (fun i value ->
             mins.[i] <- min mins.[i] value
             maxs.[i] <- max maxs.[i] value ))            
-        mins, maxs
+        let ranges = (maxs, mins) ||> Array.map2 (-)
+        mins, ranges, maxs
         
-    let getRandomCentroids count vectors =
-        let mins, maxs = getMinsAndMaxsOfDimensins vectors  
-        let dimensionRanges = (maxs, mins) ||> Array.map2 (-)
+    let getRandomCentroids count mins ranges =
         let rnd = new Random()
         let getCentroid() = 
-            (dimensionRanges, mins)
+            (ranges,  mins)
             ||> Array.map2 (fun dif min -> rnd.NextDouble() * dif + min)
         let centroids = [| for i in 1..count ->  getCentroid() |]
-        centroids, dimensionRanges
+        centroids
+
+    let getVeryDifferentCentroids centroids mins maxs=
+        centroids |> Array.map (fun centroid ->
+            (centroid, mins, maxs) |||> Array.map3 (fun value min max ->
+                if value - min > max - value then min else max ))
 
     let classCount = 
         samples 
@@ -61,12 +65,24 @@ let main argv =
     let selectNearestPoint origin points =
         points |> Array.minBy (distance origin)
 
+    let getNewClusters samples centroids = 
+        samples |> Array.groupBy (fun sample -> selectNearestPoint sample.Vector centroids) 
+
     let getNewCentroid cluster =
         let oldCentroid , samples  = cluster       
         let vectors = samples |> Array.map(fun sample -> sample.Vector)
         vectors 
             |> Array.reduce (Array.map2 (+)) 
             |> Array.map (fun x -> x / float samples.Length)
+
+    let doneThreshold = 0.001;
+    let checkKeepGoing (centroids : float [][]) (newCentroids : float[][]) dimensionRanges =
+        (centroids, newCentroids)
+        ||> Seq.map2 (Seq.map2 (-))
+        |> Seq.map (Seq.map2 (fun range delta -> abs (delta / range)) dimensionRanges)
+        |> Seq.collect (id)
+        |> Seq.exists (fun delta -> delta >= doneThreshold)
+       
 
     let displayCluster cluster =
         printfn ""
@@ -78,26 +94,20 @@ let main argv =
             printf "%s" ((fst grp).PadRight(18))
             printfn "%d" (snd grp |> Array.length) )
 
-    let doneThreshold = 0.001;
-    let checkKeepGoing (centroids : float [][]) (newCentroids : float[][]) dimensionRanges =
-        (centroids, newCentroids)
-        ||> Seq.map2 (Seq.map2 (-))
-        |> Seq.map (Seq.map2 (fun range delta -> abs (delta / range)) dimensionRanges)
-        |> Seq.collect (id)
-        |> Seq.exists (fun delta -> delta >= doneThreshold)
-       
-    let randomCentroids, dimensionRanges = getRandomCentroids classCount vectors
+
+    let dimMins, dimRanges, dimMaxs = getMinsRangesAndMaxsOfDimensions vectors
+    let randomCentroids = getRandomCentroids classCount dimMins dimMaxs
 
     let mutable keepGoing = true
     let mutable centroids = randomCentroids
     let mutable count = 0
 
     while keepGoing do
-        let clusters = samples |> Array.groupBy (fun sample -> selectNearestPoint sample.Vector centroids)   
         printfn ""
+        let clusters  = getNewClusters samples centroids
         clusters |> Array.iter displayCluster
         let newCentroids = clusters |> Array.map getNewCentroid
-        keepGoing <- checkKeepGoing centroids newCentroids dimensionRanges
+        keepGoing <- checkKeepGoing centroids newCentroids dimRanges
         centroids <- newCentroids
         count <- count + 1
         printfn "Completed cycle:  %d" count
@@ -105,4 +115,22 @@ let main argv =
 
     printfn "All done."; System.Console.ReadKey() |> ignore
     0
+
+//let mutable keepGoing = true
+//let mutable centroids = randomCentroids
+//let mutable count = 0
+//
+//while keepGoing do
+//    let clusters = samples |> Array.groupBy (fun sample -> selectNearestPoint sample.Vector centroids)   
+//    printfn ""
+//    clusters |> Array.iter displayCluster
+//    let newCentroids = clusters |> Array.map getNewCentroid
+//    keepGoing <- checkKeepGoing centroids newCentroids dimensionRanges
+//    centroids <- newCentroids
+//    count <- count + 1
+//    printfn "Completed cycle:  %d" count
+//    printfn "===================="
+//
+//printfn "All done."; System.Console.ReadKey() |> ignore
+//0
 
