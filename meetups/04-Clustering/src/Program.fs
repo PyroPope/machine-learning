@@ -79,25 +79,29 @@ let main argv =
             printfn "%d" (snd grp |> Array.length) )
 
     let doneThreshold = 0.001;
-    let checkDone (centroids : float [][]) (newCentroids : float[][]) dimensionRanges =
+    let checkKeepGoing (centroids : float [][]) (newCentroids : float[][]) dimensionRanges =
         (centroids, newCentroids)
         ||> Seq.map2 (Seq.map2 (-))
         |> Seq.map (Seq.map2 (fun range delta -> abs (delta / range)) dimensionRanges)
         |> Seq.collect (id)
-        |> Seq.forall (fun delta -> delta < doneThreshold)
+        |> Seq.exists (fun delta -> delta >= doneThreshold)
        
     let randomCentroids, dimensionRanges = getRandomCentroids classCount vectors
 
+    let mutable keepGoing = true
     let mutable centroids = randomCentroids
+    let mutable count = 0
 
-    while true do
+    while keepGoing do
         let clusters = samples |> Array.groupBy (fun sample -> selectNearestPoint sample.Vector centroids)   
-        clusters |> Array.iter displayCluster
         printfn ""
+        clusters |> Array.iter displayCluster
         let newCentroids = clusters |> Array.map getNewCentroid
-        printfn "done: %b" (checkDone centroids newCentroids dimensionRanges)
+        keepGoing <- checkKeepGoing centroids newCentroids dimensionRanges
         centroids <- newCentroids
-        Console.ReadKey() |> ignore
+        count <- count + 1
+        printfn "Completed cycle:  %d" count
+        printfn "===================="
 
     printfn "All done."; System.Console.ReadKey() |> ignore
     0
