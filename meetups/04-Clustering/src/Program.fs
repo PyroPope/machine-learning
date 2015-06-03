@@ -46,10 +46,10 @@ let main argv =
         let centroids = [| for i in 1..count ->  getCentroid() |]
         centroids
 
-    let getVeryDifferentCentroids centroids mins maxs=
-        centroids |> Array.map (fun centroid ->
-            (centroid, mins, maxs) |||> Array.map3 (fun value min max ->
-                if value - min > max - value then min else max ))
+//    let getVeryDifferentCentroids centroids mins maxs=
+//        centroids |> Array.map (fun centroid ->
+//            (centroid, mins, maxs) |||> Array.map3 (fun value min max ->
+//                if value - min > max - value then min else max ))
 
     let classCount = 
         samples 
@@ -76,12 +76,12 @@ let main argv =
             |> Array.map (fun x -> x / float samples.Length)
 
     let doneThreshold = 0.001;
-    let checkKeepGoing (centroids : float [][]) (newCentroids : float[][]) dimensionRanges =
+    let checkDone (centroids : float [][]) (newCentroids : float[][]) dimensionRanges =
         (centroids, newCentroids)
         ||> Seq.map2 (Seq.map2 (-))
         |> Seq.map (Seq.map2 (fun range delta -> abs (delta / range)) dimensionRanges)
         |> Seq.collect (id)
-        |> Seq.exists (fun delta -> delta >= doneThreshold)
+        |> Seq.forall (fun delta -> delta < doneThreshold)
        
 
     let displayCluster cluster =
@@ -98,6 +98,7 @@ let main argv =
     let dimMins, dimRanges, dimMaxs = getMinsRangesAndMaxsOfDimensions vectors
     let randomCentroids = getRandomCentroids classCount dimMins dimMaxs
 
+    // Imperious
     let mutable keepGoing = true
     let mutable centroids = randomCentroids
     let mutable count = 0
@@ -107,30 +108,30 @@ let main argv =
         let clusters  = getNewClusters samples centroids
         clusters |> Array.iter displayCluster
         let newCentroids = clusters |> Array.map getNewCentroid
-        keepGoing <- checkKeepGoing centroids newCentroids dimRanges
+        keepGoing <- not (checkDone centroids newCentroids dimRanges)
         centroids <- newCentroids
         count <- count + 1
         printfn "Completed cycle:  %d" count
         printfn "===================="
 
+    // Funky
+    ((Array.empty, randomCentroids), seq{1..1000})
+        ||> Seq.scan(fun (_, prevCentroids) count ->
+            printfn ""
+            let clusters  = getNewClusters samples prevCentroids
+            clusters |> Array.iter displayCluster
+            let newCentroids = clusters |> Array.map getNewCentroid 
+            printfn "Completed cycle:  %d" count
+            printfn "===================="
+            (prevCentroids, newCentroids))
+        |> Seq.skip(1)
+        |> Seq.filter(fun (prevCentroids, newCentroids) ->
+            checkDone prevCentroids newCentroids dimRanges)
+        |> Seq.head
+        |> ignore
+
+
     printfn "All done."; System.Console.ReadKey() |> ignore
     0
 
-//let mutable keepGoing = true
-//let mutable centroids = randomCentroids
-//let mutable count = 0
-//
-//while keepGoing do
-//    let clusters = samples |> Array.groupBy (fun sample -> selectNearestPoint sample.Vector centroids)   
-//    printfn ""
-//    clusters |> Array.iter displayCluster
-//    let newCentroids = clusters |> Array.map getNewCentroid
-//    keepGoing <- checkKeepGoing centroids newCentroids dimensionRanges
-//    centroids <- newCentroids
-//    count <- count + 1
-//    printfn "Completed cycle:  %d" count
-//    printfn "===================="
-//
-//printfn "All done."; System.Console.ReadKey() |> ignore
-//0
 
