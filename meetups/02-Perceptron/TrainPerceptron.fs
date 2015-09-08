@@ -43,9 +43,18 @@ let trainWithSeries weights samples =
     (weights, samples) ||> List.fold (fun weights sample -> 
         (trainWithSample weights (sample.inputs) sample.desired)) 
 
+//let measureAccuracy weights samples = 
+//    let correctCount = 
+//        List.filter (fun sample -> (feedforward weights sample.inputs) = sample.desired) samples
+//        |> List.length
+//    float correctCount / float samples.Length
+
 let measureAccuracy weights samples = 
-    let correctCount = 
-        List.filter (fun sample -> (feedforward weights sample.inputs) = sample.desired) samples
+    let isCorrectFor sample = 
+        sample.desired = feedforward weights sample.inputs
+    let correctCount =
+        samples 
+        |> List.filter isCorrectFor
         |> List.length
     float correctCount / float samples.Length
 
