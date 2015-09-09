@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.22823.1
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "01-LinearRegression", "01-LinearRegression\Naive\01-LinearRegression.fsproj", "{584F6B10-EE0F-4BC1-8894-278A80D6818D}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "03-NeuralNetwork", "03-NeuralNetwork\03-NeuralNetwork.fsproj", "{E08A1C37-32E5-4B7B-BD26-17254DB87F4F}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "04-Clustering", "04-Clustering\src\04-Clustering.fsproj", "{572D0696-7502-46B0-817F-EE8C06DC0769}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Genetic", "05-GenericAlgorithms\Genetic.fsproj", "{2F8A5221-EC98-403A-8B53-2C6B83C3C861}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{572D0696-7502-46B0-817F-EE8C06DC0769}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{572D0696-7502-46B0-817F-EE8C06DC0769}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{572D0696-7502-46B0-817F-EE8C06DC0769}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F8A5221-EC98-403A-8B53-2C6B83C3C861}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F8A5221-EC98-403A-8B53-2C6B83C3C861}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F8A5221-EC98-403A-8B53-2C6B83C3C861}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F8A5221-EC98-403A-8B53-2C6B83C3C861}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
