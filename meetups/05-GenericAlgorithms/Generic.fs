@@ -10,12 +10,7 @@ let ga population select breed crossover observe terminate  =
                 |> select
                 |> breed popSize crossover 
         
-        let nextUpdateTime = 
-            if DateTime.UtcNow > nextUpdateTime then
-                observe newPop generation
-                DateTime.UtcNow.AddSeconds(1.0)
-            else
-                nextUpdateTime
+        observe newPop generation
         if terminate newPop generation then
             newPop
         else
@@ -44,4 +39,3 @@ let breed getMutationRate targetSize crossover population = [|
         let first = pickFirst ()
         let second = pickSecond first
         yield crossover mutationRate population.[first] population.[second] |]
-

@@ -2,6 +2,14 @@
 open Generic
 open ArrayPop
 open Data
+
+(* 
+    Fixed length string mutation to create Hamelet's soliloquy.
+
+    Uses "Uniform" crossover which is probably why the smaller 
+    the population the better the efficiency
+
+*)
     
 [<EntryPoint>]
 let main argv = 
@@ -33,10 +41,13 @@ let main argv =
         let bestText = new String(bestPeep : char[])
         printfn "%s \n\n>completed generation %i %s %f" bestText generation (sw.Elapsed.ToString(@"hh\:mm\:ss\.fff")) bestFit
     
+    let mutable nextUpdateTime = DateTime.UtcNow
     let observe pop generation = 
-        let best = Array.head pop
-        let bestPeep, bestFit = best
-        display bestPeep bestFit generation
+        if DateTime.UtcNow > nextUpdateTime then
+            let best = Array.head pop
+            let bestPeep, bestFit = best
+            display bestPeep bestFit generation
+            nextUpdateTime <- DateTime.UtcNow.AddSeconds(1.0)
 
     let terminate population generation = 
         let best = Array.head population
